@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Assistant</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+    }
+
+    .avatar-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      height: auto;
+      z-index: 999;
+    }
+
+    .avatar-video {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .text-overlay {
+      position: absolute;
+      bottom: 60px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-size: 18px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .buttons {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .buttons button {
+      padding: 6px 16px;
+      font-size: 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    .buttons button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+<div class="avatar-container">
+  <video id="avatarVideo" class="avatar-video" autoplay muted="false" playsinline>
+    <source src="videos/avatar_welcome.mp4" type="video/mp4">
+    Sizin brauzer videonu dəstəkləmir.
+  </video>
+  <div class="text-overlay" id="typewriterText"></div>
+  <div class="buttons" id="buttons">
+    <button onclick="alert('Bəli seçildi')">Bəli</button>
+    <button onclick="alert('Xeyr seçildi')">Xeyr</button>
+  </div>
+</div>
+
+<script>
+  const text = "Salam, sizə necə kömək edərəm?";
+  const textElement = document.getElementById("typewriterText");
+  const buttons = document.getElementById("buttons");
+
+  let index = 0;
+
+  function typeText() {
+    if (index < text.length) {
+      textElement.innerHTML += text.charAt(index);
+      index++;
+      setTimeout(typeText, 100); // Yazma sürəti
+    } else {
+      buttons.style.display = "block";
+    }
+  }
+
+  window.onload = function() {
+    const video = document.getElementById("avatarVideo");
+
+    // Səsi aktiv et
+    video.muted = false;
+
+    // Videonun başlamasından 1 saniyə sonra yazı başlasın
+    setTimeout(typeText, 1000);
+
+    // Video tamamlandıqda heç nə etməsin, sadəcə dayanacaq
+    video.onended = function() {
+      // istəsən burada nəsə əlavə edə bilərsən
+    };
+  };
+</script>
+
+</body>
+</html>
