@@ -6,101 +6,132 @@
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
+      background: #f5f5f5;
+      font-family: sans-serif;
     }
 
-    .avatar-container {
+    .container {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 300px;
-      z-index: 999;
+      width: 320px;
     }
 
-    .avatar-video {
+    video {
       width: 100%;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
     }
 
-    .text-overlay {
+    .text {
       margin-top: 10px;
       text-align: center;
-      color: black;
-      font-size: 18px;
       font-weight: bold;
+      font-size: 18px;
       animation: fadeIn 1s ease-in-out;
     }
 
-    .buttons {
+    .buttons, .more-buttons {
       text-align: center;
       margin-top: 10px;
-      animation: fadeIn 1.5s ease-in-out;
+      display: none;
     }
 
-    .buttons button {
-      padding: 6px 16px;
-      font-size: 16px;
+    button {
       margin: 5px;
+      padding: 8px 16px;
+      font-size: 14px;
       border: none;
       border-radius: 6px;
-      background-color: #007bff;
+      background: #007bff;
       color: white;
       cursor: pointer;
     }
 
-    .buttons button:hover {
-      background-color: #0056b3;
+    button:hover {
+      background: #0056b3;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      z-index: 999;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-<div class="avatar-container">
-  <video id="avatarVideo" class="avatar-video" autoplay muted playsinline>
-    <source src="videos/greeting.mp4" type="video/mp4">
-    Brauzeriniz videonu dəstəkləmir.
-  </video>
-  <div class="text-overlay" id="typewriterText"></div>
-  <div class="buttons" id="buttons" style="display:none;">
-    <button onclick="handleChoice('books')">Kitablar haqqında öyrənmək</button>
-    <button onclick="handleChoice('site')">Sayt haqqında öyrənmək</button>
-  </div>
+<!-- User click overlay -->
+<div class="overlay" id="startOverlay">Başlamaq üçün klikləyin</div>
 
-  <div class="buttons" id="secondaryButtons" style="display:none;">
+<div class="container">
+  <video id="video" playsinline></video>
+  <div class="text" id="text"></div>
+  <div class="buttons" id="buttons">
+    <button onclick="handleChoice('books')">Kitablar haqqında</button>
+    <button onclick="handleChoice('site')">Sayt haqqında</button>
+  </div>
+  <div class="more-buttons" id="moreButtons">
     <button>Sonlandır</button>
-    <button>Başqa şeylər haqqında öyrən</button>
-    <button>Nümunə 1</button>
-    <button>Nümunə 2</button>
+    <button>Başqa şeylər</button>
+    <button>✦</button>
+    <button>❖</button>
   </div>
 </div>
 
 <script>
-  const video = document.getElementById("avatarVideo");
-  const textElement = document.getElementById("typewriterText");
-  const buttons = document.getElementById("buttons");
-  const secondaryButtons = document.getElementById("secondaryButtons");
+  const video = document.getElementById('video');
+  const overlay = document.getElementById('startOverlay');
+  const textEl = document.getElementById('text');
+  const buttons = document.getElementById('buttons');
+  const moreButtons = document.getElementById('moreButtons');
 
-  const audios = {
-    books: "audio/books.mp3",
-    site: "audio/site.mp3"
-  };
+  const greeting = 'videos/greeting.mp4';  // has voice inside
+  const idle = 'videos/idle.mp4';
+  const talking = 'videos/talking.mp4';
+
+  // Wait for user interaction
+  overlay.addEventListener('click', () => {
+    overlay.style.display = 'none';
+    playGreeting();
+  });
+
+  function playGreeting() {
+    video.src = greeting;
+    video.muted = false;
+    video.play();
+
+    // When greeting video ends
+    video.onended = () => {
+      video.src = idle;
+      video.loop = true;
+      video.play();
+      typeText('Sizə necə kömək edə bilərəm?', () => {
+        buttons.style.display = 'block';
+      });
+    };
+  }
 
   function typeText(text, callback) {
-    textElement.innerHTML = "";
-    let index = 0;
+    textEl.innerHTML = '';
+    let i = 0;
     function type() {
-      if (index < text.length) {
-        textElement.innerHTML += text.charAt(index);
-        index++;
-        setTimeout(type, 50);
+      if (i < text.length) {
+        textEl.innerHTML += text.charAt(i);
+        i++;
+        setTimeout(type, 40);
       } else if (callback) {
         callback();
       }
@@ -108,44 +139,21 @@
     type();
   }
 
-  video.onended = () => {
-    // Switch to idle video
-    video.src = "videos/idle.mp4";
-    video.loop = true;
-    video.play();
-    // Show buttons and animated text
-    typeText("Sizə necə kömək edə bilərəm?", () => {
-      buttons.style.display = "block";
-    });
-  };
-
   function handleChoice(choice) {
-    const audio = new Audio(audios[choice]);
-
-    // Switch to talking video
+    buttons.style.display = 'none';
     video.loop = true;
-    video.src = "videos/talking.mp4";
+    video.src = talking;
     video.play();
 
-    // Text under video
-    if (choice === "books") {
-      typeText("Kitablar haqqında məlumat verilir...");
-    } else if (choice === "site") {
-      typeText("Sayt haqqında məlumat verilir...");
+    if (choice === 'books') {
+      typeText('Kitablar haqqında məlumat...');
+    } else {
+      typeText('Sayt haqqında məlumat...');
     }
 
-    buttons.style.display = "none";
-
-    audio.play();
-    audio.onended = () => {
-      // Go back to idle video
-      video.src = "videos/idle.mp4";
-      video.loop = true;
-      video.play();
-      typeText("Başqa nə ilə kömək edə bilərəm?", () => {
-        secondaryButtons.style.display = "block";
-      });
-    };
+    setTimeout(() => {
+      moreButtons.style.display = 'block';
+    }, 3500); // delay for buttons
   }
 </script>
 
