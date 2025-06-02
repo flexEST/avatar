@@ -2,92 +2,66 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8">
-  <title>Audio Assistant</title>
+  <title>Gizli Asistent</title>
   <style>
     body {
       margin: 0;
-      background-color: white; /* AĞ FON */
+      background-color: white;
+      overflow: hidden;
     }
 
-    #avatarContainer {
+    #videoContainer {
+      display: none;
       position: fixed;
       bottom: 20px;
       right: 20px;
       width: 300px;
-      z-index: 1000;
+      z-index: 999;
     }
 
     video {
       width: 100%;
       border-radius: 12px;
-      outline: none;
-    }
-
-    .hidden {
-      display: none;
     }
   </style>
 </head>
 <body>
 
-<div id="avatarContainer">
-  <video id="idleVideo" autoplay loop muted playsinline>
-    <source src="videos/idle.mp4" type="video/mp4">
-    Brauzeriniz videonu dəstəkləmir.
-  </video>
-</div>
-
-<!-- Audio Fayllar -->
-<audio id="option1Audio" src="audio/option1.mp3"></audio>
-<audio id="option2Audio" src="audio/option2.mp3"></audio>
-<audio id="option3Audio" src="audio/option3.mp3"></audio>
-<audio id="option4Audio" src="audio/option4.mp3"></audio>
+<div id="videoContainer"></div>
 
 <script>
-  const idleVideo = document.getElementById("idleVideo");
+  const videoContainer = document.getElementById("videoContainer");
 
-  const optionAudios = {
-    "1": document.getElementById("option1Audio"),
-    "2": document.getElementById("option2Audio"),
-    "3": document.getElementById("option3Audio"),
-    "4": document.getElementById("option4Audio")
+  const videos = {
+    "f": "videos/greeting.mp4",
+    "1": "videos/option1.mp4",
+    "2": "videos/option2.mp4",
+    "3": "videos/option3.mp4",
+    "4": "videos/option4.mp4"
   };
 
-  const avatarContainer = document.getElementById("avatarContainer");
-  let isGreetingPlayed = false;
+  function playVideoWithSound(src) {
+    videoContainer.innerHTML = '';
+    const video = document.createElement("video");
+    video.src = src;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = false;
+    video.controls = false;
 
-  function playGreetingVideo(withSound = true) {
-    const greetingVideo = document.createElement("video");
-    greetingVideo.src = "videos/greeting.mp4";
-    greetingVideo.autoplay = true;
-    greetingVideo.playsInline = true;
-    greetingVideo.muted = !withSound;
-    greetingVideo.style.width = "100%";
-    greetingVideo.style.borderRadius = "12px";
+    videoContainer.style.display = 'block';
+    videoContainer.appendChild(video);
 
-    avatarContainer.innerHTML = '';
-    avatarContainer.appendChild(greetingVideo);
-
-    greetingVideo.onended = () => {
-      avatarContainer.innerHTML = '';
-      avatarContainer.appendChild(idleVideo);
-      idleVideo.play();
+    video.onended = () => {
+      videoContainer.innerHTML = '';
+      videoContainer.style.display = 'none';
     };
   }
 
   window.addEventListener("keydown", (e) => {
     const key = e.key.toLowerCase();
-
-    if (key === "f" && !isGreetingPlayed) {
-      isGreetingPlayed = true;
-      playGreetingVideo(true); // F basanda səslə
-    } else if (["1", "2", "3", "4"].includes(key)) {
-      const audio = optionAudios[key];
-      if (audio) {
-        playGreetingVideo(false); // səssiz video
-        audio.currentTime = 0;
-        audio.play();
-      }
+    if (videos[key]) {
+      playVideoWithSound(videos[key]);
     }
   });
 </script>
