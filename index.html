@@ -98,11 +98,16 @@
   const buttons = document.getElementById('buttons');
   const moreButtons = document.getElementById('moreButtons');
 
-  const greeting = 'videos/greeting.mp4';  // has voice inside
-  const idle = 'videos/idle.mp4';
-  const talking = 'videos/talking.mp4';
+  const greeting = 'videos/greeting.mp4';  // has audio
+  const idle = 'videos/idle.mp4';          // silent loop
+  const talking = 'videos/talking.mp4';    // silent video
+  const audios = {
+    books: 'audio/books.mp3',
+    site: 'audio/site.mp3'
+  };
 
-  // Wait for user interaction
+  let audio = new Audio();
+
   overlay.addEventListener('click', () => {
     overlay.style.display = 'none';
     playGreeting();
@@ -113,15 +118,20 @@
     video.muted = false;
     video.play();
 
-    // When greeting video ends
+    // Show text as soon as video starts
+    typeText("Salam, sizə necə kömək edə bilərəm?");
+
     video.onended = () => {
-      video.src = idle;
-      video.loop = true;
-      video.play();
-      typeText('Sizə necə kömək edə bilərəm?', () => {
-        buttons.style.display = 'block';
-      });
+      playIdle();
+      buttons.style.display = 'block'; // Buttons appear AFTER greeting.mp4 ends
     };
+  }
+
+  function playIdle() {
+    video.src = idle;
+    video.muted = true;
+    video.loop = true;
+    video.play();
   }
 
   function typeText(text, callback) {
@@ -141,19 +151,26 @@
 
   function handleChoice(choice) {
     buttons.style.display = 'none';
+    textEl.innerHTML = '';
     video.loop = true;
     video.src = talking;
+    video.muted = true;
     video.play();
 
     if (choice === 'books') {
-      typeText('Kitablar haqqında məlumat...');
+      audio.src = audios.books;
+      typeText("Kitablar haqqında məlumat...");
     } else {
-      typeText('Sayt haqqında məlumat...');
+      audio.src = audios.site;
+      typeText("Sayt haqqında məlumat...");
     }
 
-    setTimeout(() => {
+    audio.play();
+
+    audio.onended = () => {
       moreButtons.style.display = 'block';
-    }, 3500); // delay for buttons
+      playIdle();
+    };
   }
 </script>
 
