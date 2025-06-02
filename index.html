@@ -15,6 +15,7 @@
       bottom: 20px;
       right: 20px;
       width: 320px;
+      display: none;
     }
 
     video {
@@ -57,26 +58,42 @@
       to {opacity: 1; transform: translateY(0);}
     }
 
-    .overlay {
+    .assistant-button {
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #007bff;
       display: flex;
-      align-items: center;
       justify-content: center;
-      color: white;
-      font-size: 24px;
-      z-index: 999;
+      align-items: center;
       cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+      transition: transform 0.2s;
+    }
+
+    .assistant-button:hover {
+      transform: scale(1.1);
+    }
+
+    .assistant-button img {
+      width: 32px;
+      height: 32px;
     }
   </style>
 </head>
 <body>
 
-<!-- User click overlay -->
-<div class="overlay" id="startOverlay">Başlamaq üçün klikləyin</div>
+<!-- Assistant Icon Button -->
+<div class="assistant-button" id="assistantBtn">
+  <img src="https://cdn-icons-png.flaticon.com/512/4712/4712105.png" alt="assistant">
+</div>
 
-<div class="container">
+<!-- Assistant Container -->
+<div class="container" id="assistantContainer">
   <video id="video" playsinline></video>
   <div class="text" id="text"></div>
   <div class="buttons" id="buttons">
@@ -93,10 +110,11 @@
 
 <script>
   const video = document.getElementById('video');
-  const overlay = document.getElementById('startOverlay');
   const textEl = document.getElementById('text');
   const buttons = document.getElementById('buttons');
   const moreButtons = document.getElementById('moreButtons');
+  const assistantBtn = document.getElementById('assistantBtn');
+  const assistantContainer = document.getElementById('assistantContainer');
 
   const greeting = 'videos/greeting.mp4';  // has audio
   const idle = 'videos/idle.mp4';          // silent loop
@@ -108,22 +126,23 @@
 
   let audio = new Audio();
 
-  overlay.addEventListener('click', () => {
-    overlay.style.display = 'none';
+  assistantBtn.addEventListener('click', () => {
+    assistantBtn.style.display = 'none';
+    assistantContainer.style.display = 'block';
     playGreeting();
   });
 
   function playGreeting() {
     video.src = greeting;
     video.muted = false;
+    video.loop = false;
     video.play();
 
-    // Show text as soon as video starts
     typeText("Salam, sizə necə kömək edə bilərəm?");
 
     video.onended = () => {
       playIdle();
-      buttons.style.display = 'block'; // Buttons appear AFTER greeting.mp4 ends
+      buttons.style.display = 'block';
     };
   }
 
