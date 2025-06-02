@@ -2,7 +2,7 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8">
-  <title>Gizli Asistent</title>
+  <title>Asistent</title>
   <style>
     body {
       margin: 0;
@@ -40,30 +40,59 @@
     "4": "videos/option4.mp4"
   };
 
-  function playVideoWithSound(src) {
-    videoContainer.innerHTML = '';
+  let idleVideo = null;
+
+  function playVideo(src, muted = false, loop = false, onEnd = null) {
+    stopCurrentVideo();
+
     const video = document.createElement("video");
     video.src = src;
     video.autoplay = true;
     video.playsInline = true;
-    video.muted = false;
+    video.muted = muted;
+    video.loop = loop;
     video.controls = false;
 
-    videoContainer.style.display = 'block';
+    videoContainer.innerHTML = '';
     videoContainer.appendChild(video);
+    videoContainer.style.display = 'block';
 
-    video.onended = () => {
-      videoContainer.innerHTML = '';
-      videoContainer.style.display = 'none';
-    };
+    if (!loop && onEnd) {
+      video.onended = onEnd;
+    }
+  }
+
+  function stopCurrentVideo() {
+    videoContainer.innerHTML = '';
+    videoContainer.style.display = 'none';
+  }
+
+  function playIdleVideo() {
+    stopCurrentVideo();
+
+    idleVideo = document.createElement("video");
+    idleVideo.src = "videos/idle.mp4";
+    idleVideo.autoplay = true;
+    idleVideo.playsInline = true;
+    idleVideo.muted = true;
+    idleVideo.loop = true;
+    idleVideo.controls = false;
+
+    videoContainer.appendChild(idleVideo);
+    videoContainer.style.display = 'block';
   }
 
   window.addEventListener("keydown", (e) => {
     const key = e.key.toLowerCase();
+
     if (videos[key]) {
-      playVideoWithSound(videos[key]);
+      playVideo(videos[key], false, false, () => {
+        playIdleVideo();
+      });
     }
   });
+
+  // İlk açılışda heç nə göstərilmir
 </script>
 
 </body>
