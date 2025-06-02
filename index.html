@@ -40,6 +40,7 @@
     "4": "videos/option4.mp4"
   };
 
+  let state = "idle"; // idle, playing, waiting-reply
   let idleVideo = null;
 
   function playVideo(src, muted = false, loop = false, onEnd = null) {
@@ -80,19 +81,46 @@
 
     videoContainer.appendChild(idleVideo);
     videoContainer.style.display = 'block';
+    state = "idle";
+  }
+
+  function handleFollowUpChoice(key) {
+    if (key === "1") {
+      // Söhbəti sonlandır
+      stopCurrentVideo();
+      state = "idle";
+    } else if (key === "2") {
+      // Başa qayıt
+      state = "playing";
+      playVideo("videos/greeting.mp4", false, false, () => {
+        playIdleVideo();
+      });
+    }
   }
 
   window.addEventListener("keydown", (e) => {
     const key = e.key.toLowerCase();
 
-    if (videos[key]) {
-      playVideo(videos[key], false, false, () => {
+    if (state === "idle" && key === "f") {
+      state = "playing";
+      playVideo("videos/greeting.mp4", false, false, () => {
         playIdleVideo();
       });
     }
+
+    if (state === "idle" && ["1", "2", "3", "4"].includes(key)) {
+      state = "playing";
+      playVideo(`videos/option${key}.mp4`, false, false, () => {
+        // Video bitdikdən sonra 1 və 2 variantları üçün gözləmə rejiminə keç
+        state = "waiting-reply";
+      });
+    }
+
+    if (state === "waiting-reply" && (key === "1" || key === "2")) {
+      handleFollowUpChoice(key);
+    }
   });
 
-  // İlk açılışda heç nə göstərilmir
 </script>
 
 </body>
