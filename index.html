@@ -6,7 +6,7 @@
   <style>
     body {
       margin: 0;
-      background-color: black;
+      background-color: white; /* AĞ FON */
     }
 
     #avatarContainer {
@@ -23,7 +23,6 @@
       outline: none;
     }
 
-    /* Hide everything else */
     .hidden {
       display: none;
     }
@@ -38,15 +37,13 @@
   </video>
 </div>
 
-<!-- Hidden Audio Elements -->
-<audio id="greetingAudio" src="audio/greeting.mp3"></audio>
+<!-- Audio Fayllar -->
 <audio id="option1Audio" src="audio/option1.mp3"></audio>
 <audio id="option2Audio" src="audio/option2.mp3"></audio>
 <audio id="option3Audio" src="audio/option3.mp3"></audio>
 <audio id="option4Audio" src="audio/option4.mp3"></audio>
 
 <script>
-  const greetingAudio = document.getElementById("greetingAudio");
   const idleVideo = document.getElementById("idleVideo");
 
   const optionAudios = {
@@ -56,16 +53,15 @@
     "4": document.getElementById("option4Audio")
   };
 
+  const avatarContainer = document.getElementById("avatarContainer");
   let isGreetingPlayed = false;
 
-  function playGreeting() {
-    const avatarContainer = document.getElementById("avatarContainer");
-
+  function playGreetingVideo(withSound = true) {
     const greetingVideo = document.createElement("video");
     greetingVideo.src = "videos/greeting.mp4";
     greetingVideo.autoplay = true;
     greetingVideo.playsInline = true;
-    greetingVideo.muted = false;
+    greetingVideo.muted = !withSound;
     greetingVideo.style.width = "100%";
     greetingVideo.style.borderRadius = "12px";
 
@@ -80,13 +76,15 @@
   }
 
   window.addEventListener("keydown", (e) => {
-    if (e.key.toLowerCase() === 'f' && !isGreetingPlayed) {
+    const key = e.key.toLowerCase();
+
+    if (key === "f" && !isGreetingPlayed) {
       isGreetingPlayed = true;
-      playGreeting();
-      greetingAudio.play();
-    } else if (["1", "2", "3", "4"].includes(e.key)) {
-      const audio = optionAudios[e.key];
+      playGreetingVideo(true); // F basanda səslə
+    } else if (["1", "2", "3", "4"].includes(key)) {
+      const audio = optionAudios[key];
       if (audio) {
+        playGreetingVideo(false); // səssiz video
         audio.currentTime = 0;
         audio.play();
       }
