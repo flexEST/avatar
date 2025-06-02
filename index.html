@@ -37,6 +37,7 @@
       background: rgba(0, 0, 0, 0.5);
       padding: 8px;
       border-radius: 8px;
+      display: none;
     }
 
     .buttons {
@@ -64,11 +65,11 @@
 <body>
 
 <div class="avatar-container">
-  <video id="avatarVideo" class="avatar-video" autoplay muted="false" playsinline>
-    <source src="videos/avatar_welcome.mp4" type="video/mp4">
+  <video id="avatarVideo" class="avatar-video" autoplay muted playsinline>
+    <source src="videos/idle.mp4" type="video/mp4">
     Sizin brauzer videonu dəstəkləmir.
   </video>
-  <div class="text-overlay" id="typewriterText"></div>
+  <div class="text-overlay" id="typewriterText">Salam, sizə necə kömək edərəm?</div>
   <div class="buttons" id="buttons">
     <button onclick="alert('Bəli seçildi')">Bəli</button>
     <button onclick="alert('Xeyr seçildi')">Xeyr</button>
@@ -76,36 +77,27 @@
 </div>
 
 <script>
-  const text = "Salam, sizə necə kömək edə bilərəm?";
-  const textElement = document.getElementById("typewriterText");
+  const video = document.getElementById("avatarVideo");
+  const textOverlay = document.getElementById("typewriterText");
   const buttons = document.getElementById("buttons");
 
-  let index = 0;
+  // Start with idle video
+  video.muted = false;
+  video.src = "videos/idle.mp4";
+  video.play();
 
-  function typeText() {
-    if (index < text.length) {
-      textElement.innerHTML += text.charAt(index);
-      index++;
-      setTimeout(typeText, 20); // Yazma sürəti
-    } else {
+  // After 3 seconds, switch to talking video
+  setTimeout(() => {
+    video.src = "videos/talking.mp4";
+    video.play();
+
+    textOverlay.style.display = "block";
+
+    // After talking video ends, show buttons
+    video.onended = function () {
       buttons.style.display = "block";
-    }
-  }
-
-  window.onload = function() {
-    const video = document.getElementById("avatarVideo");
-
-    // Səsi aktiv et
-    video.muted = false;
-
-    // Videonun başlamasından 1 saniyə sonra yazı başlasın
-    setTimeout(typeText, 1000);
-
-    // Video tamamlandıqda heç nə etməsin, sadəcə dayanacaq
-    video.onended = function() {
-      // istəsən burada nəsə əlavə edə bilərsən
     };
-  };
+  }, 3000);
 </script>
 
 </body>
