@@ -7,15 +7,15 @@
     body {
       margin: 0;
       padding: 0;
-      background-color: #f0f0f0;
       font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
     }
 
     .avatar-container {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 320px;
+      width: 300px;
       z-index: 999;
     }
 
@@ -26,21 +26,18 @@
     }
 
     .text-overlay {
-      margin-top: 8px;
-      font-size: 18px;
+      margin-top: 10px;
       text-align: center;
-      background: rgba(0, 0, 0, 0.6);
-      color: white;
-      padding: 10px;
-      border-radius: 8px;
+      color: black;
+      font-size: 18px;
+      font-weight: bold;
       animation: fadeIn 1s ease-in-out;
     }
 
     .buttons {
-      display: none;
-      margin-top: 10px;
       text-align: center;
-      animation: fadeIn 1s ease-in-out;
+      margin-top: 10px;
+      animation: fadeIn 1.5s ease-in-out;
     }
 
     .buttons button {
@@ -67,98 +64,88 @@
 <body>
 
 <div class="avatar-container">
-  <video id="avatarVideo" class="avatar-video" autoplay muted playsinline loop>
-    <source src="videos/talking.mp4" type="video/mp4">
+  <video id="avatarVideo" class="avatar-video" autoplay muted playsinline>
+    <source src="videos/greeting.mp4" type="video/mp4">
     Brauzeriniz videonu dəstəkləmir.
   </video>
   <div class="text-overlay" id="typewriterText"></div>
-  <div class="buttons" id="buttons">
-    <button onclick="handleOption('kitablar')">📚 Kitablar haqqında</button>
-    <button onclick="handleOption('sayt')">🌐 Sayt haqqında</button>
+  <div class="buttons" id="buttons" style="display:none;">
+    <button onclick="handleChoice('books')">Kitablar haqqında öyrənmək</button>
+    <button onclick="handleChoice('site')">Sayt haqqında öyrənmək</button>
+  </div>
+
+  <div class="buttons" id="secondaryButtons" style="display:none;">
+    <button>Sonlandır</button>
+    <button>Başqa şeylər haqqında öyrən</button>
+    <button>Nümunə 1</button>
+    <button>Nümunə 2</button>
   </div>
 </div>
 
-<audio id="voiceAudio"></audio>
-
 <script>
   const video = document.getElementById("avatarVideo");
-  const audio = document.getElementById("voiceAudio");
   const textElement = document.getElementById("typewriterText");
   const buttons = document.getElementById("buttons");
+  const secondaryButtons = document.getElementById("secondaryButtons");
 
-  let index = 0;
-
-  // Salamlaşma səsi və mətni
-  window.onload = () => {
-    playTalking("audio/greeting.mp3", "Salam, sizə necə kömək edə bilərəm?", () => {
-      showButtons();
-    });
+  const audios = {
+    books: "audio/books.mp3",
+    site: "audio/site.mp3"
   };
 
-  function handleOption(option) {
-    buttons.style.display = "none";
-    let audioSrc = "";
-    let text = "";
-
-    if (option === "kitablar") {
-      audioSrc = "audio/books.mp3";
-      text = "Kitablar haqqında məlumat verə bilərəm.";
-    } else if (option === "sayt") {
-      audioSrc = "audio/site.mp3";
-      text = "Sayt haqqında qısa məlumat verə bilərəm.";
-    }
-
-    playTalking(audioSrc, text, () => {
-      buttons.innerHTML = `
-        <button onclick="alert('Sonlandırıldı')">🛑 Sonlandır</button>
-        <button onclick="alert('Başqa mövzu')">🔄 Başqa şeylər</button>
-        <button disabled>Boş 1</button>
-        <button disabled>Boş 2</button>
-      `;
-      showButtons();
-    });
-  }
-
-  function playTalking(audioSrc, text, callback) {
-    // Qız danışan videonu göstər
-    video.src = "videos/talking.mp4";
-    video.loop = true;
-    video.play();
-
-    // Audio səsləndir
-    audio.src = audioSrc;
-    audio.play();
-
-    // Yazını animasiya ilə göstər
-    typeAnimatedText(text, callback);
-
-    // Səs bitəndə dayanan videoya keç
-    audio.onended = () => {
-      video.src = "videos/idle.mp4";
-      video.loop = true;
-      video.play();
-    };
-  }
-
-  function typeAnimatedText(text, callback) {
+  function typeText(text, callback) {
     textElement.innerHTML = "";
-    index = 0;
-
-    function typeChar() {
+    let index = 0;
+    function type() {
       if (index < text.length) {
         textElement.innerHTML += text.charAt(index);
         index++;
-        setTimeout(typeChar, 60);
-      } else {
-        if (callback) callback();
+        setTimeout(type, 50);
+      } else if (callback) {
+        callback();
       }
     }
-
-    typeChar();
+    type();
   }
 
-  function showButtons() {
-    buttons.style.display = "block";
+  video.onended = () => {
+    // Switch to idle video
+    video.src = "videos/idle.mp4";
+    video.loop = true;
+    video.play();
+    // Show buttons and animated text
+    typeText("Sizə necə kömək edə bilərəm?", () => {
+      buttons.style.display = "block";
+    });
+  };
+
+  function handleChoice(choice) {
+    const audio = new Audio(audios[choice]);
+
+    // Switch to talking video
+    video.loop = true;
+    video.src = "videos/talking.mp4";
+    video.play();
+
+    // Text under video
+    if (choice === "books") {
+      typeText("Kitablar haqqında məlumat verilir...");
+    } else if (choice === "site") {
+      typeText("Sayt haqqında məlumat verilir...");
+    }
+
+    buttons.style.display = "none";
+
+    audio.play();
+    audio.onended = () => {
+      // Go back to idle video
+      video.src = "videos/idle.mp4";
+      video.loop = true;
+      video.play();
+      typeText("Başqa nə ilə kömək edə bilərəm?", () => {
+        secondaryButtons.style.display = "block";
+      });
+    };
   }
 </script>
 
