@@ -7,9 +7,8 @@
     body {
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
       background-color: #f0f0f0;
-      overflow-x: hidden;
+      font-family: Arial, sans-serif;
     }
 
     .avatar-container {
@@ -17,7 +16,6 @@
       bottom: 20px;
       right: 20px;
       width: 300px;
-      height: auto;
       z-index: 999;
     }
 
@@ -29,47 +27,44 @@
 
     .text-overlay {
       position: absolute;
-      bottom: -60px;
+      bottom: 80px;
       left: 0;
-      width: 100vw;
+      width: 100%;
       text-align: center;
-      color: black;
-      font-size: 22px;
-      padding: 12px;
-      animation: fadeIn 2s ease-in-out, typing 3s steps(40, end);
-      white-space: nowrap;
-      overflow: hidden;
-      border-right: 3px solid black;
+      font-size: 18px;
+      color: white;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      animation: fadeIn 1s ease-in-out;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes typing {
-      from { width: 0; }
-      to { width: 100vw; }
-    }
-
-    .buttons, .extra-buttons, .final-buttons {
+    .buttons {
       display: none;
       text-align: center;
-      margin-top: 20px;
+      margin-top: 10px;
+      animation: fadeIn 1s ease-in-out;
     }
 
-    .buttons button, .extra-buttons button, .final-buttons button {
+    .buttons button {
+      margin: 6px;
       padding: 10px 20px;
       font-size: 16px;
-      margin: 8px;
       border: none;
       border-radius: 6px;
       background-color: #007bff;
       color: white;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
 
-    .buttons button:hover, .extra-buttons button:hover, .final-buttons button:hover {
+    .buttons button:hover {
       background-color: #0056b3;
     }
   </style>
@@ -77,73 +72,40 @@
 <body>
 
 <div class="avatar-container">
-  <video id="avatarVideo" class="avatar-video" autoplay muted playsinline>
+  <video id="avatarVideo" class="avatar-video" autoplay loop muted playsinline>
     <source src="videos/girl_idle.mp4" type="video/mp4">
-    Brauzeriniz video dəstəkləmir.
+    Brauzer videonu dəstəkləmir.
   </video>
-  <audio id="voicePlayer" src="voice/hello.mp3"></audio>
   <div class="text-overlay" id="typewriterText"></div>
-  <div class="buttons" id="buttons">
-    <button onclick="handleChoice('kitablar')">Kitablar haqqında öyrənmək istəyirəm</button>
-    <button onclick="handleChoice('sayt')">Sayt haqqında öyrənmək istəyirəm</button>
-  </div>
-  <div class="extra-buttons" id="extraButtons">
-    <button onclick="showFinal()">Sonlandır</button>
-    <button onclick="showMore()">Başqa şeylər haqqında öyrən</button>
-  </div>
-  <div class="final-buttons" id="finalButtons">
-    <button>Seçim 1</button>
-    <button>Seçim 2</button>
-    <button>Seçim 3</button>
-    <button>Seçim 4</button>
+  <div class="buttons" id="optionButtons">
+    <button onclick="alert('Kitablar seçildi')">📚 Kitablar haqqında öyrənmək istəyirəm</button>
+    <button onclick="alert('Sayt seçildi')">🌐 Sayt haqqında öyrənmək istəyirəm</button>
   </div>
 </div>
 
+<audio id="voiceHello" src="voice/hello.mp3"></audio>
+
 <script>
+  const text = "Salam, sizə necə kömək edə bilərəm?";
   const textElement = document.getElementById("typewriterText");
-  const buttons = document.getElementById("buttons");
-  const extraButtons = document.getElementById("extraButtons");
-  const finalButtons = document.getElementById("finalButtons");
-  const video = document.getElementById("avatarVideo");
-  const voice = document.getElementById("voicePlayer");
+  const buttons = document.getElementById("optionButtons");
+  const audio = document.getElementById("voiceHello");
 
-  function speak(text, audioSrc) {
-    textElement.innerHTML = text;
-    voice.src = audioSrc;
-    video.src = "videos/girl_talking.mp4";
-    voice.play();
-    voice.onended = () => {
-      video.src = "videos/girl_idle.mp4";
-    };
-  }
+  let index = 0;
 
-  function handleChoice(choice) {
-    if (choice === 'kitablar') {
-      speak("Əla seçim! Kitablar haqqında danışaq...", "voice/sample.mp3");
-    } else if (choice === 'sayt') {
-      speak("Sayt haqqında məlumat verirəm...", "voice/sample.mp3");
+  function typeText() {
+    if (index < text.length) {
+      textElement.innerHTML += text.charAt(index);
+      index++;
+      setTimeout(typeText, 70); // Sürət
+    } else {
+      buttons.style.display = "block";
     }
-    buttons.style.display = "none";
-    setTimeout(() => extraButtons.style.display = "block", 3000);
-  }
-
-  function showFinal() {
-    extraButtons.style.display = "none";
-    finalButtons.style.display = "block";
-  }
-
-  function showMore() {
-    extraButtons.style.display = "none";
-    finalButtons.style.display = "block";
   }
 
   window.onload = () => {
-    setTimeout(() => {
-      speak("Salam, sizə necə kömək edə bilərəm?", "voice/hello.mp3");
-      setTimeout(() => {
-        buttons.style.display = "block";
-      }, 3000);
-    }, 1000);
+    audio.play();
+    setTimeout(typeText, 1000); // Audio ilə birlikdə mətn başlasın
   };
 </script>
 
