@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="az">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Audio Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blind Assistant</title>
   <style>
     body {
       margin: 0;
@@ -14,118 +14,118 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 250px;
+      width: 200px;
       height: auto;
-      display: none;
-      z-index: 9999;
+      z-index: 10;
     }
     video {
       width: 100%;
-      border-radius: 20px;
+      height: auto;
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
+  <div id="videoContainer" style="display: none;">
+    <video id="video" muted loop></video>
+  </div>
 
-<div id="videoContainer">
-  <video id="assistantVideo" muted loop>
-    <source src="videos/idle.mp4" type="video/mp4" />
-  </video>
-</div>
+  <audio id="audio"></audio>
 
-<script>
-  const videoContainer = document.getElementById('videoContainer');
-  const assistantVideo = document.getElementById('assistantVideo');
+  <script>
+    const video = document.getElementById("video");
+    const audio = document.getElementById("audio");
+    const container = document.getElementById("videoContainer");
 
-  const audioGreeting = new Audio('audio/greeting.mp3');
-  const audioKitab = new Audio('audio/kitab.mp3');
-  const audioSayt = new Audio('audio/sayt.mp3');
-  const audioHava = new Audio('audio/hava.mp3');
-  const audioBasaDusmedim = new Audio('audio/basa_dusmedim.mp3');
+    let recognition;
 
-  let currentAudio = null;
-
-  function playVideo(src, loop = true) {
-    assistantVideo.loop = loop;
-    assistantVideo.src = src;
-    assistantVideo.load();
-    assistantVideo.play();
-  }
-
-  function playAudio(audio, callback) {
-    if (currentAudio) currentAudio.pause();
-    currentAudio = audio;
-    currentAudio.currentTime = 0;
-    currentAudio.play();
-    currentAudio.onended = () => {
-      if (callback) callback();
-    };
-  }
-
-  function switchToIdle() {
-    playVideo("videos/idle.mp4", true);
-  }
-
-  function handleVoiceCommand(text) {
-    let matched = false;
-
-    const lowerText = text.toLowerCase();
-
-    if (lowerText.includes("kitab")) {
-      matched = true;
-      playVideo("videos/talking.mp4", false);
-      playAudio(audioKitab, switchToIdle);
-    } else if (lowerText.includes("sayt")) {
-      matched = true;
-      playVideo("videos/talking.mp4", false);
-      playAudio(audioSayt, switchToIdle);
-    } else if (lowerText.includes("hava")) {
-      matched = true;
-      playVideo("videos/talking.mp4", false);
-      playAudio(audioHava, switchToIdle);
-    }
-
-    if (!matched) {
-      playVideo("videos/talking.mp4", false);
-      playAudio(audioBasaDusmedim, switchToIdle);
-    }
-  }
-
-  function startRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Sənin brauzerin səs tanımanı dəstəkləmir.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "az-AZ";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.start();
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      handleVoiceCommand(transcript);
+    const videos = {
+      idle: "videos/idle.mp4",
+      talking: "videos/talking.mp4"
     };
 
-    recognition.onerror = () => {
-      playVideo("videos/talking.mp4", false);
-      playAudio(audioBasaDusmedim, switchToIdle);
+    const audios = {
+      greeting: "audio/greeting.mp3",
+      kitab: "audio/kitab.mp3",
+      sayt: "audio/sayt.mp3",
+      hava: "audio/hava.mp3",
+      saat: "audio/saat.mp3",
+      error: "audio/basa_dusmedim.mp3"
     };
-  }
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'f') {
-      videoContainer.style.display = 'block';
-      playVideo("videos/talking.mp4", false);
-      playAudio(audioGreeting, switchToIdle);
+    function playVideo(src, isLoop = true) {
+      video.src = src;
+      video.loop = isLoop;
+      video.muted = true;
+      video.play();
     }
-    if (e.key.toLowerCase() === 'm') {
-      startRecognition();
+
+    function playTalkingWithAudio(audioSrc, callback) {
+      video.loop = false;
+      video.src = videos.talking;
+      video.muted = true;
+      video.play();
+      audio.src = audioSrc;
+      audio.play();
+
+      audio.onended = () => {
+        video.pause();
+        playVideo(videos.idle);
+        if (callback) callback();
+      };
     }
-  });
-</script>
+
+    function startAssistantFlow() {
+      container.style.display = "block";
+      playTalkingWithAudio(audios.greeting, () => {
+        startRecognition();
+      });
+    }
+
+    function respondToCommand(text) {
+      text = text.toLowerCase();
+      if (text.includes("kitab")) {
+        playTalkingWithAudio(audios.kitab, startRecognition);
+      } else if (text.includes("sayt")) {
+        playTalkingWithAudio(audios.sayt, startRecognition);
+      } else if (text.includes("hava")) {
+        playTalkingWithAudio(audios.hava, startRecognition);
+      } else if (text.includes("saat")) {
+        playTalkingWithAudio(audios.saat, startRecognition);
+      } else {
+        playTalkingWithAudio(audios.error, startRecognition);
+      }
+    }
+
+    function startRecognition() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Səs tanıma dəstəklənmir.");
+        return;
+      }
+
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = "az-AZ";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        respondToCommand(transcript);
+      };
+
+      recognition.onerror = function (event) {
+        console.error("Speech recognition error:", event.error);
+        playTalkingWithAudio(audios.error, startRecognition);
+      };
+
+      recognition.start();
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key.toLowerCase() === "f") {
+        startAssistantFlow();
+      }
+    });
+  </script>
 </body>
 </html>
