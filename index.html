@@ -2,11 +2,11 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8">
-  <title>Assistanta Sual Ver</title>
+  <title>Virtual Assistant</title>
   <style>
     body {
       margin: 0;
-      background: white;
+      background-color: white;
     }
 
     #assistantContainer {
@@ -22,14 +22,14 @@
     video {
       width: 100%;
       height: auto;
-      border-radius: 10px;
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
 
   <div id="assistantContainer">
-    <video id="assistantVideo" loop muted autoplay playsinline></video>
+    <video id="assistantVideo" autoplay muted playsinline></video>
   </div>
 
   <audio id="audioPlayer"></audio>
@@ -45,6 +45,7 @@
     };
 
     const audios = {
+      f: 'audio/greeting.mp3',
       1: 'audio/audio1.mp3',
       2: 'audio/audio2.mp3',
       3: 'audio/audio3.mp3',
@@ -52,33 +53,31 @@
       5: 'audio/audio5.mp3'
     };
 
-    function showVideo(src, loop = true, muted = true) {
+    function playVideo(src, loop = true, muted = true) {
       assistantVideo.src = src;
       assistantVideo.loop = loop;
       assistantVideo.muted = muted;
       assistantVideo.play();
     }
 
-    function startAssistant(audioSrc) {
+    function playInteraction(key) {
+      const audioSrc = audios[key];
+      if (!audioSrc) return;
+
       assistantContainer.style.display = 'block';
-      showVideo(videos.talking, true, true);
+      playVideo(videos.talking, true, true); // talking video, muted
       audioPlayer.src = audioSrc;
       audioPlayer.play();
 
       audioPlayer.onended = () => {
-        showVideo(videos.idle, true, true);
+        playVideo(videos.idle, true, true); // return to idle
       };
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'f') {
-        startAssistant(audios[1]);
-      } else if (['1','2','3','4','5'].includes(e.key)) {
-        if (assistantContainer.style.display !== 'block') {
-          assistantContainer.style.display = 'block';
-          showVideo(videos.idle, true, true);
-        }
-        startAssistant(audios[e.key]);
+      const key = e.key.toLowerCase();
+      if (audios.hasOwnProperty(key)) {
+        playInteraction(key);
       }
     });
   </script>
