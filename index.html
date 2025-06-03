@@ -1,85 +1,109 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-  <meta charset="UTF-8">
-  <title>Virtual Assistant</title>
+  <meta charset="UTF-8" />
+  <title>Assistant</title>
   <style>
     body {
       margin: 0;
-      background-color: white;
+      background: white;
+      overflow: hidden;
     }
-
     #assistantContainer {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 220px;
-      height: auto;
-      display: none;
-      z-index: 1000;
+      z-index: 9999;
     }
-
-    video {
-      width: 100%;
-      height: auto;
+    #assistantVideo {
+      width: 220px;
       border-radius: 12px;
+    }
+    #micButton {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: black;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <div id="assistantContainer">
-    <video id="assistantVideo" autoplay muted playsinline></video>
-  </div>
+<div id="assistantContainer" style="display: none;">
+  <video id="assistantVideo" autoplay loop muted playsinline></video>
+  <button id="micButton">🎤 Mikrofonu Aç</button>
+</div>
 
-  <audio id="audioPlayer"></audio>
+<script>
+  const video = document.getElementById("assistantVideo");
+  const micButton = document.getElementById("micButton");
+  const container = document.getElementById("assistantContainer");
 
-  <script>
-    const assistantContainer = document.getElementById('assistantContainer');
-    const assistantVideo = document.getElementById('assistantVideo');
-    const audioPlayer = document.getElementById('audioPlayer');
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'az-AZ';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
 
-    const videos = {
-      idle: 'videos/idle.mp4',
-      talking: 'videos/talking.mp4'
-    };
+  function playVideo(src, muted = true, loop = true) {
+    video.src = src;
+    video.muted = muted;
+    video.loop = loop;
+    video.playbackRate = src.includes("idle.mp4") ? 0.6 : 1.0;
+    video.play();
+  }
 
-    const audios = {
-      f: 'audio/greeting.mp3',
-      1: 'audio/audio1.mp3',
-      2: 'audio/audio2.mp3',
-      3: 'audio/audio3.mp3',
-      4: 'audio/audio4.mp3',
-      5: 'audio/audio5.mp3'
-    };
-
-    function playVideo(src, loop = true, muted = true) {
-      assistantVideo.src = src;
-      assistantVideo.loop = loop;
-      assistantVideo.muted = muted;
-      assistantVideo.play();
-    }
-
-    function playInteraction(key) {
-      const audioSrc = audios[key];
-      if (!audioSrc) return;
-
-      assistantContainer.style.display = 'block';
-      playVideo(videos.talking, true, true); // talking video, muted
-      audioPlayer.src = audioSrc;
-      audioPlayer.play();
-
-      audioPlayer.onended = () => {
-        playVideo(videos.idle, true, true); // return to idle
-      };
-    }
-
-    document.addEventListener('keydown', (e) => {
-      const key = e.key.toLowerCase();
-      if (audios.hasOwnProperty(key)) {
-        playInteraction(key);
-      }
+  function playAudio(audioFile) {
+    const audio = new Audio(audioFile);
+    audio.play();
+    return new Promise(resolve => {
+      audio.onended = resolve;
     });
-  </script>
+  }
+
+  // Start when user presses "F"
+  document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "f") {
+      container.style.display = "block";
+      playVideo("videos/idle.mp4", true, true);
+    }
+  });
+
+  micButton.addEventListener("click", () => {
+    recognition.start();
+    micButton.textContent = "🎙️ Dinlənir...";
+  });
+
+  recognition.onresult = async (event) => {
+    const transcript = event.results[0][0].transcript.toLowerCase();
+    console.log("Söz: ", transcript);
+    micButton.textContent = "🎤 Mikrofonu Aç";
+
+    // Danışan video + uyğun səs
+    playVideo("videos/talking.mp4", true, false);
+
+    if (transcript.includes("kitab")) {
+      await playAudio("audio/kitap.mp3");
+    } else if (transcript.includes("hava")) {
+      await playAudio("audio/hava.mp3");
+    } else {
+      await playAudio("audio/kitap.mp3"); // default səs
+    }
+
+    // Audio bitəndən sonra idle video yenidən
+    playVideo("videos/idle.mp4", true, true);
+  };
+
+  recognition.onerror = () => {
+    micButton.textContent = "🎤 Mikrofonu Aç";
+  };
+</script>
+
 </body>
 </html>
