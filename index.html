@@ -2,126 +2,79 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8">
-  <title>Asistent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Qız Assistant</title>
   <style>
     body {
       margin: 0;
-      background-color: white;
+      background: white;
       overflow: hidden;
     }
-
     #videoContainer {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 0px;
-      width: 300px;
-      z-index: 999;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-
     video {
-      width: 100%;
-      border-radius: 12px;
+      height: 100vh;
+      object-fit: contain;
     }
   </style>
 </head>
 <body>
+  <div id="videoContainer">
+    <video id="idleVideo" src="videos/idle.mp4" autoplay loop muted></video>
+    <video id="talkingVideo" src="videos/talking.mp4" style="display: none;"></video>
+  </div>
 
-<div id="videoContainer"></div>
+  <audio id="audio1" src="audio/audio1.mp3"></audio>
+  <audio id="audio2" src="audio/audio2.mp3"></audio>
+  <audio id="audio3" src="audio/audio3.mp3"></audio>
+  <audio id="audio4" src="audio/audio4.mp3"></audio>
+  <audio id="audio5" src="audio/audio5.mp3"></audio>
 
-<script>
-  const videoContainer = document.getElementById("videoContainer");
+  <script>
+    const idleVideo = document.getElementById("idleVideo");
+    const talkingVideo = document.getElementById("talkingVideo");
 
-  const videos = {
-    "f": "videos/greeting.mp4",
-    "1": "videos/option1.mp4",
-    "2": "videos/option2.mp4",
-    "3": "videos/option3.mp4",
-    "4": "videos/option4.mp4"
-  };
+    const audios = [
+      document.getElementById("audio1"),
+      document.getElementById("audio2"),
+      document.getElementById("audio3"),
+      document.getElementById("audio4"),
+      document.getElementById("audio5")
+    ];
 
-  let state = "idle"; // idle, playing, waiting-reply
-  let idleVideo = null;
+    function playInteraction(index) {
+      if (index < 0 || index >= audios.length) return;
+      
+      idleVideo.style.display = "none";
+      talkingVideo.style.display = "block";
+      talkingVideo.currentTime = 0;
+      talkingVideo.loop = true;
+      talkingVideo.play();
 
-  function playVideo(src, muted = false, loop = false, onEnd = null) {
-    stopCurrentVideo();
+      audios[index].currentTime = 0;
+      audios[index].play();
 
-    const video = document.createElement("video");
-    video.src = src;
-    video.autoplay = true;
-    video.playsInline = true;
-    video.muted = muted;
-    video.loop = loop;
-    video.controls = false;
-
-    videoContainer.innerHTML = '';
-    videoContainer.appendChild(video);
-    videoContainer.style.display = 'block';
-
-    if (!loop && onEnd) {
-      video.onended = onEnd;
-    }
-  }
-
-  function stopCurrentVideo() {
-    videoContainer.innerHTML = '';
-    videoContainer.style.display = 'none';
-  }
-
-  function playIdleVideo() {
-    stopCurrentVideo();
-
-    idleVideo = document.createElement("video");
-    idleVideo.src = "videos/idle.mp4";
-    idleVideo.autoplay = true;
-    idleVideo.playsInline = true;
-    idleVideo.muted = true;
-    idleVideo.loop = true;
-    idleVideo.controls = false;
-
-    videoContainer.appendChild(idleVideo);
-    videoContainer.style.display = 'block';
-    state = "idle";
-  }
-
-  function handleFollowUpChoice(key) {
-    if (key === "1") {
-      // Söhbəti sonlandır
-      stopCurrentVideo();
-      state = "idle";
-    } else if (key === "2") {
-      // Başa qayıt
-      state = "playing";
-      playVideo("videos/greeting.mp4", false, false, () => {
-        playIdleVideo();
-      });
-    }
-  }
-
-  window.addEventListener("keydown", (e) => {
-    const key = e.key.toLowerCase();
-
-    if (state === "idle" && key === "f") {
-      state = "playing";
-      playVideo("videos/greeting.mp4", false, false, () => {
-        playIdleVideo();
-      });
+      audios[index].onended = () => {
+        talkingVideo.pause();
+        talkingVideo.style.display = "none";
+        idleVideo.style.display = "block";
+        idleVideo.play();
+      }
     }
 
-    if (state === "idle" && ["1", "2", "3", "4"].includes(key)) {
-      state = "playing";
-      playVideo(`videos/option${key}.mp4`, false, false, () => {
-        // Video bitdikdən sonra 1 və 2 variantları üçün gözləmə rejiminə keç
-        state = "waiting-reply";
-      });
-    }
-
-    if (state === "waiting-reply" && (key === "1" || key === "2")) {
-      handleFollowUpChoice(key);
-    }
-  });
-
-</script>
-
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "1") playInteraction(0);
+      if (e.key === "2") playInteraction(1);
+      if (e.key === "3") playInteraction(2);
+      if (e.key === "4") playInteraction(3);
+      if (e.key === "5") playInteraction(4);
+    });
+  </script>
 </body>
 </html>
