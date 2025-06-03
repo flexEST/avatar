@@ -2,78 +2,84 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Qız Assistant</title>
+  <title>Assistanta Sual Ver</title>
   <style>
     body {
       margin: 0;
       background: white;
-      overflow: hidden;
     }
-    #videoContainer {
-      width: 100vw;
-      height: 100vh;
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+
+    #assistantContainer {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 220px;
+      height: auto;
+      display: none;
+      z-index: 1000;
     }
+
     video {
-      height: 100vh;
-      object-fit: contain;
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <div id="videoContainer">
-    <video id="idleVideo" src="videos/idle.mp4" autoplay loop muted></video>
-    <video id="talkingVideo" src="videos/talking.mp4" style="display: none;"></video>
+
+  <div id="assistantContainer">
+    <video id="assistantVideo" loop muted autoplay playsinline></video>
   </div>
 
-  <audio id="audio1" src="audio/audio1.mp3"></audio>
-  <audio id="audio2" src="audio/audio2.mp3"></audio>
-  <audio id="audio3" src="audio/audio3.mp3"></audio>
-  <audio id="audio4" src="audio/audio4.mp3"></audio>
-  <audio id="audio5" src="audio/audio5.mp3"></audio>
+  <audio id="audioPlayer"></audio>
 
   <script>
-    const idleVideo = document.getElementById("idleVideo");
-    const talkingVideo = document.getElementById("talkingVideo");
+    const assistantContainer = document.getElementById('assistantContainer');
+    const assistantVideo = document.getElementById('assistantVideo');
+    const audioPlayer = document.getElementById('audioPlayer');
 
-    const audios = [
-      document.getElementById("audio1"),
-      document.getElementById("audio2"),
-      document.getElementById("audio3"),
-      document.getElementById("audio4"),
-      document.getElementById("audio5")
-    ];
+    const videos = {
+      idle: 'videos/idle.mp4',
+      talking: 'videos/talking.mp4'
+    };
 
-    function playInteraction(index) {
-      if (index < 0 || index >= audios.length) return;
-      
-      idleVideo.style.display = "none";
-      talkingVideo.style.display = "block";
-      talkingVideo.currentTime = 0;
-      talkingVideo.loop = true;
-      talkingVideo.play();
+    const audios = {
+      1: 'audio/audio1.mp3',
+      2: 'audio/audio2.mp3',
+      3: 'audio/audio3.mp3',
+      4: 'audio/audio4.mp3',
+      5: 'audio/audio5.mp3'
+    };
 
-      audios[index].currentTime = 0;
-      audios[index].play();
-
-      audios[index].onended = () => {
-        talkingVideo.pause();
-        talkingVideo.style.display = "none";
-        idleVideo.style.display = "block";
-        idleVideo.play();
-      }
+    function showVideo(src, loop = true, muted = true) {
+      assistantVideo.src = src;
+      assistantVideo.loop = loop;
+      assistantVideo.muted = muted;
+      assistantVideo.play();
     }
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "1") playInteraction(0);
-      if (e.key === "2") playInteraction(1);
-      if (e.key === "3") playInteraction(2);
-      if (e.key === "4") playInteraction(3);
-      if (e.key === "5") playInteraction(4);
+    function startAssistant(audioSrc) {
+      assistantContainer.style.display = 'block';
+      showVideo(videos.talking, true, true);
+      audioPlayer.src = audioSrc;
+      audioPlayer.play();
+
+      audioPlayer.onended = () => {
+        showVideo(videos.idle, true, true);
+      };
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'f') {
+        startAssistant(audios[1]);
+      } else if (['1','2','3','4','5'].includes(e.key)) {
+        if (assistantContainer.style.display !== 'block') {
+          assistantContainer.style.display = 'block';
+          showVideo(videos.idle, true, true);
+        }
+        startAssistant(audios[e.key]);
+      }
     });
   </script>
 </body>
