@@ -2,121 +2,130 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Virtual Köməkçi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Audio Assistant</title>
   <style>
     body {
       margin: 0;
       background: white;
       overflow: hidden;
     }
-    #assistantContainer {
+    #videoContainer {
       position: fixed;
-      bottom: 10px;
-      right: 10px;
-      width: 220px;
-      height: 320px;
+      bottom: 20px;
+      right: 20px;
+      width: 250px;
+      height: auto;
       display: none;
-      border-radius: 12px;
-      overflow: hidden;
+      z-index: 9999;
     }
     video {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    #micBtn {
-      display: none;
+      border-radius: 20px;
     }
   </style>
 </head>
 <body>
-  <div id="assistantContainer">
-    <video id="idleVideo" src="videos/idle.mp4" loop muted></video>
-    <video id="talkingVideo" src="videos/talking.mp4" style="display: none;"></video>
-  </div>
-  <audio id="audio"></audio>
 
-  <script>
-    const assistant = document.getElementById('assistantContainer');
-    const idleVideo = document.getElementById('idleVideo');
-    const talkingVideo = document.getElementById('talkingVideo');
-    const audio = document.getElementById('audio');
+<div id="videoContainer">
+  <video id="assistantVideo" muted loop>
+    <source src="videos/idle.mp4" type="video/mp4" />
+  </video>
+</div>
 
-    // Audio paths
-    const greetingAudio = 'audio/greeting.mp3';
-    const kitabAudio = 'audio/kitab.mp3';
-    const saytAudio = 'audio/sayt.mp3';
-    const havaAudio = 'audio/hava.mp3';
-    const basaDusmedimAudio = 'audio/basadusmedim.mp3';
+<script>
+  const videoContainer = document.getElementById('videoContainer');
+  const assistantVideo = document.getElementById('assistantVideo');
 
-    // Mikrafon tanıma (Web Speech API)
-    let recognition;
-    if ('webkitSpeechRecognition' in window) {
-      recognition = new webkitSpeechRecognition();
-      recognition.lang = 'az-AZ';
-      recognition.continuous = false;
-      recognition.interimResults = false;
+  const audioGreeting = new Audio('audio/greeting.mp3');
+  const audioKitab = new Audio('audio/kitab.mp3');
+  const audioSayt = new Audio('audio/sayt.mp3');
+  const audioHava = new Audio('audio/hava.mp3');
+  const audioBasaDusmedim = new Audio('audio/basa_dusmedim.mp3');
 
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        if (transcript.includes('kitab')) {
-          playTalkingWithAudio(kitabAudio);
-        } else if (transcript.includes('sayt')) {
-          playTalkingWithAudio(saytAudio);
-        } else if (transcript.includes('hava')) {
-          playTalkingWithAudio(havaAudio);
-        } else {
-          playTalkingWithAudio(basaDusmedimAudio);
-        }
-      };
+  let currentAudio = null;
+
+  function playVideo(src, loop = true) {
+    assistantVideo.loop = loop;
+    assistantVideo.src = src;
+    assistantVideo.load();
+    assistantVideo.play();
+  }
+
+  function playAudio(audio, callback) {
+    if (currentAudio) currentAudio.pause();
+    currentAudio = audio;
+    currentAudio.currentTime = 0;
+    currentAudio.play();
+    currentAudio.onended = () => {
+      if (callback) callback();
+    };
+  }
+
+  function switchToIdle() {
+    playVideo("videos/idle.mp4", true);
+  }
+
+  function handleVoiceCommand(text) {
+    let matched = false;
+
+    const lowerText = text.toLowerCase();
+
+    if (lowerText.includes("kitab")) {
+      matched = true;
+      playVideo("videos/talking.mp4", false);
+      playAudio(audioKitab, switchToIdle);
+    } else if (lowerText.includes("sayt")) {
+      matched = true;
+      playVideo("videos/talking.mp4", false);
+      playAudio(audioSayt, switchToIdle);
+    } else if (lowerText.includes("hava")) {
+      matched = true;
+      playVideo("videos/talking.mp4", false);
+      playAudio(audioHava, switchToIdle);
     }
 
-    // Play talking video with synced audio
-    function playTalkingWithAudio(audioFile) {
-      idleVideo.style.display = 'none';
-      talkingVideo.style.display = 'block';
-      talkingVideo.currentTime = 0;
-      talkingVideo.play();
+    if (!matched) {
+      playVideo("videos/talking.mp4", false);
+      playAudio(audioBasaDusmedim, switchToIdle);
+    }
+  }
 
-      audio.src = audioFile;
-      audio.play();
-
-      audio.onended = () => {
-        talkingVideo.pause();
-        talkingVideo.currentTime = 0;
-
-        talkingVideo.style.display = 'none';
-        idleVideo.style.display = 'block';
-        idleVideo.play();
-      };
+  function startRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Sənin brauzerin səs tanımanı dəstəkləmir.");
+      return;
     }
 
-    // Start with assistant hidden, press F to activate
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'f') {
-        assistant.style.display = 'block';
-        idleVideo.style.display = 'none';
-        talkingVideo.style.display = 'block';
-        talkingVideo.currentTime = 0;
-        talkingVideo.play();
+    const recognition = new SpeechRecognition();
+    recognition.lang = "az-AZ";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
-        audio.src = greetingAudio;
-        audio.play();
+    recognition.start();
 
-        audio.onended = () => {
-          talkingVideo.pause();
-          talkingVideo.currentTime = 0;
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      handleVoiceCommand(transcript);
+    };
 
-          talkingVideo.style.display = 'none';
-          idleVideo.style.display = 'block';
-          idleVideo.play();
+    recognition.onerror = () => {
+      playVideo("videos/talking.mp4", false);
+      playAudio(audioBasaDusmedim, switchToIdle);
+    };
+  }
 
-          // Start microphone
-          if (recognition) recognition.start();
-        };
-      }
-    });
-  </script>
+  document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'f') {
+      videoContainer.style.display = 'block';
+      playVideo("videos/talking.mp4", false);
+      playAudio(audioGreeting, switchToIdle);
+    }
+    if (e.key.toLowerCase() === 'm') {
+      startRecognition();
+    }
+  });
+</script>
 </body>
 </html>
