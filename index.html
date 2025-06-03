@@ -1,72 +1,73 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-  <meta charset="UTF-8">
-  <title>Səsli Köməkçi</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assistant for the Blind</title>
   <style>
     body {
       margin: 0;
       background-color: white;
       overflow: hidden;
     }
-    #container {
+    #videoContainer {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 250px;
+      bottom: 10px;
+      left: 10px;
+      width: 200px;
       height: auto;
-      display: none;
-      z-index: 9999;
+      z-index: 1000;
     }
     video {
       width: 100%;
-      border-radius: 16px;
+      height: auto;
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
 
-  <div id="container">
-    <video id="video" autoplay muted loop playsinline></video>
+  <div id="videoContainer">
+    <video id="assistantVideo" muted autoplay loop>
+      <source src="videos/idle.mp4" type="video/mp4">
+    </video>
   </div>
 
   <script>
-    const container = document.getElementById("container");
-    const video = document.getElementById("video");
+    const videoElement = document.getElementById("assistantVideo");
 
     const audioGreeting = new Audio("audio/greeting.mp3");
+    const audioKitab = new Audio("audio/kitab.mp3");
+    const audioSite = new Audio("audio/site.mp3");
+    const audioWeather = new Audio("audio/weather.mp3");
+    const audioTime = new Audio("audio/time.mp3");
     const audioBasaDusmedim = new Audio("audio/basa_dusmedim.mp3");
 
     const audioMap = {
-      "kitab": new Audio("audio/kitab.mp3"),
-      "sayt": new Audio("audio/sayt.mp3"),
-      "hava": new Audio("audio/hava.mp3"),
-      "başqa": new Audio("audio/basqa.mp3")
+      "kitab": audioKitab,
+      "site": audioSite,
+      "hava": audioWeather,
+      "saat": audioTime,
     };
 
     let recognition;
-
-    function startSpeechRecognition() {
-      if (!('webkitSpeechRecognition' in window)) {
-        alert("Bu brauzer səs tanımanı dəstəkləmir.");
-        return;
-      }
-
+    if ("webkitSpeechRecognition" in window) {
       recognition = new webkitSpeechRecognition();
       recognition.lang = "az-AZ";
       recognition.continuous = false;
       recognition.interimResults = false;
 
-      recognition.onresult = function(event) {
-        const result = event.results[0][0].transcript.toLowerCase().trim();
-        console.log("Deyildi:", result);
-
+      recognition.onresult = function (event) {
+        const result = event.results[0][0].transcript.toLowerCase();
         let matched = false;
 
         for (let keyword in audioMap) {
           if (result.includes(keyword)) {
             playVideo("videos/talking.mp4", true);
             audioMap[keyword].play();
+            audioMap[keyword].onended = () => {
+              playVideo("videos/idle.mp4", true);
+            };
             matched = true;
             break;
           }
@@ -75,45 +76,56 @@
         if (!matched) {
           playVideo("videos/talking.mp4", true);
           audioBasaDusmedim.play();
+          audioBasaDusmedim.onended = () => {
+            playVideo("videos/idle.mp4", true);
+          };
         }
-
-        setTimeout(() => {
-          playVideo("videos/idle.mp4", true);
-        }, 5000);
       };
 
-      recognition.onerror = function(event) {
-        console.error("Xəta:", event.error);
+      recognition.onerror = function () {
         playVideo("videos/talking.mp4", true);
         audioBasaDusmedim.play();
-        setTimeout(() => {
+        audioBasaDusmedim.onended = () => {
           playVideo("videos/idle.mp4", true);
-        }, 5000);
+        };
       };
-
-      recognition.start();
     }
 
     function playVideo(src, loop = true) {
-      video.src = src;
-      video.loop = loop;
-      video.muted = src.includes("idle");
-      video.play();
+      videoElement.src = src;
+      videoElement.loop = loop;
+      videoElement.muted = src.includes("idle");
+      videoElement.play();
     }
 
     document.addEventListener("keydown", (e) => {
       if (e.key.toLowerCase() === "f") {
-        container.style.display = "block";
         playVideo("videos/talking.mp4", false);
         audioGreeting.play();
-
         audioGreeting.onended = () => {
           playVideo("videos/idle.mp4", true);
-          startSpeechRecognition();
         };
+      }
+
+      if (["1", "2", "3", "4"].includes(e.key)) {
+        let selectedAudio;
+        switch (e.key) {
+          case "1": selectedAudio = audioKitab; break;
+          case "2": selectedAudio = audioSite; break;
+          case "3": selectedAudio = audioWeather; break;
+          case "4": selectedAudio = audioTime; break;
+        }
+        playVideo("videos/talking.mp4", false);
+        selectedAudio.play();
+        selectedAudio.onended = () => {
+          playVideo("videos/idle.mp4", true);
+        };
+      }
+
+      if (e.key.toLowerCase() === "m") {
+        if (recognition) recognition.start();
       }
     });
   </script>
-
 </body>
 </html>
