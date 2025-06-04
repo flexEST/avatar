@@ -1,171 +1,144 @@
 <!DOCTYPE html>
-<html lang="az">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice Assistant</title>
   <style>
     body {
       margin: 0;
       background: white;
       overflow: hidden;
     }
-
-    #videoContainer {
+    #video-container {
       position: fixed;
       bottom: 10px;
       right: 10px;
       width: 250px;
       height: auto;
-      display: none;
+      z-index: 999;
     }
-
     video {
       width: 100%;
-      height: auto;
-      border-radius: 20px;
+      border-radius: 16px;
     }
-
-    #assistantIcon {
+    #transcript-bar {
       position: fixed;
-      bottom: 10px;
-      right: 10px;
-      width: 80px;
-      height: 80px;
-      background: url('assistant.png') no-repeat center center / cover;
-      border-radius: 50%;
-      cursor: pointer;
-      z-index: 10;
-    }
-
-    #transcriptBox {
-      position: fixed;
-      bottom: 100px;
-      right: 10px;
-      padding: 10px 15px;
-      background: #f0f0f0;
-      color: #333;
-      font-size: 16px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: #0f0;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-family: monospace;
       display: none;
       animation: fadeIn 0.3s ease-in-out;
     }
-
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <div id="assistantIcon" title="F düyməsinə bas və ya kliklə"></div>
 
-  <div id="videoContainer">
-    <video id="idleVideo" src="videos/idle.mp4" autoplay muted loop></video>
-    <video id="talkingVideo" src="videos/talking.mp4" style="display:none;" muted></video>
+  <div id="transcript-bar"></div>
+
+  <div id="video-container">
+    <video id="idleVideo" src="videos/idle.mp4" loop muted autoplay></video>
+    <video id="talkingVideo" src="videos/talking.mp4" muted style="display: none;"></video>
   </div>
 
-  <div id="transcriptBox"></div>
+  <audio id="greeting" src="audio/greeting.mp3"></audio>
+  <audio id="bookInfo" src="audio/1.mp3"></audio>
+  <audio id="siteInfo" src="audio/2.mp3"></audio>
+  <audio id="features" src="audio/3.mp3"></audio>
+  <audio id="contact" src="audio/4.mp3"></audio>
+  <audio id="notunderstood" src="audio/basa_dusmedim.mp3"></audio>
 
   <script>
-    const assistantIcon = document.getElementById("assistantIcon");
-    const videoContainer = document.getElementById("videoContainer");
     const idleVideo = document.getElementById("idleVideo");
     const talkingVideo = document.getElementById("talkingVideo");
-    const transcriptBox = document.getElementById("transcriptBox");
+    const transcriptBar = document.getElementById("transcript-bar");
+
+    const greeting = document.getElementById("greeting");
+    const bookInfo = document.getElementById("bookInfo");
+    const siteInfo = document.getElementById("siteInfo");
+    const features = document.getElementById("features");
+    const contact = document.getElementById("contact");
+    const notunderstood = document.getElementById("notunderstood");
 
     let recognition;
 
-    function playIdle() {
-      talkingVideo.style.display = "none";
-      idleVideo.style.display = "block";
-      idleVideo.play();
-    }
-
-    function playTalking(audioFile) {
-      idleVideo.pause();
+    function playTalkingWithAudio(audioElement) {
       idleVideo.style.display = "none";
-      talkingVideo.currentTime = 0;
       talkingVideo.style.display = "block";
+      talkingVideo.currentTime = 0;
       talkingVideo.play();
+      audioElement.currentTime = 0;
+      audioElement.play();
 
-      const audio = new Audio(audioFile);
-      audio.play();
-      audio.onended = () => {
+      audioElement.onended = () => {
         talkingVideo.pause();
-        playIdle();
+        talkingVideo.style.display = "none";
+        idleVideo.style.display = "block";
+        idleVideo.play();
       };
     }
 
     function showTranscript(text) {
-      transcriptBox.textContent = `Axtarılır: "${text}"`;
-      transcriptBox.style.display = "block";
-      setTimeout(() => {
-        transcriptBox.style.display = "none";
-      }, 4000);
-    }
-
-    function startListening() {
-      if (!('webkitSpeechRecognition' in window)) {
-        alert("Brauzeriniz səs tanımanı dəstəkləmir.");
-        return;
-      }
-
-      recognition = new webkitSpeechRecognition();
-      recognition.lang = 'az-AZ';
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.onresult = function(event) {
-        const said = event.results[0][0].transcript.trim().toLowerCase();
-        showTranscript(said);
-
-        if (said.includes("kitab")) {
-          playTalking("audio/kitab.mp3");
-        } else if (said.includes("sayt")) {
-          playTalking("audio/sayt.mp3");
-        } else if (said.includes("yardım")) {
-          playTalking("audio/yardim.mp3");
-        } else if (said.includes("təqdimat")) {
-          playTalking("audio/teqdimat.mp3");
-        } else {
-          playTalking("audio/basa_dusmedim.mp3");
-        }
-      };
-
-      recognition.onerror = function() {
-        playTalking("audio/basa_dusmedim.mp3");
-      };
-
-      recognition.start();
-    }
-
-    function activateAssistant() {
-      assistantIcon.style.display = "none";
-      videoContainer.style.display = "block";
-      talkingVideo.muted = false;
-      talkingVideo.src = "videos/greeting.mp4";
-      talkingVideo.style.display = "block";
-      idleVideo.style.display = "none";
-      talkingVideo.play();
-
-      talkingVideo.onended = () => {
-        talkingVideo.muted = true;
-        talkingVideo.src = "videos/talking.mp4";
-        playIdle();
-        startListening();
-      };
+      transcriptBar.textContent = `Searching: ${text}`;
+      transcriptBar.style.display = "block";
+      setTimeout(() => transcriptBar.style.display = "none", 5000);
     }
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "f") {
-        activateAssistant();
+        playTalkingWithAudio(greeting);
       }
     });
 
-    assistantIcon.addEventListener("click", () => {
-      activateAssistant();
-    });
+    // Mic trigger without button
+    window.onload = () => {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'az-AZ';
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript.toLowerCase();
+          showTranscript(transcript);
+
+          if (transcript.includes("kitab")) {
+            playTalkingWithAudio(bookInfo);
+          } else if (transcript.includes("sayt")) {
+            playTalkingWithAudio(siteInfo);
+          } else if (transcript.includes("xüsusiyyət") || transcript.includes("funksiya")) {
+            playTalkingWithAudio(features);
+          } else if (transcript.includes("əlaqə") || transcript.includes("nömrə")) {
+            playTalkingWithAudio(contact);
+          } else {
+            playTalkingWithAudio(notunderstood);
+          }
+        };
+
+        recognition.onerror = (event) => {
+          console.error("Speech recognition error", event);
+        };
+
+        recognition.onend = () => {
+          recognition.start();
+        };
+
+        recognition.start();
+      } else {
+        alert("Səs tanıma bu brauzerdə dəstəklənmir.");
+      }
+    };
   </script>
 </body>
 </html>
