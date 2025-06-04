@@ -1,144 +1,155 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="az">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Voice Assistant</title>
+  <title>Audio Assistant</title>
   <style>
     body {
       margin: 0;
       background: white;
       overflow: hidden;
     }
-    #video-container {
+    #videoContainer {
       position: fixed;
       bottom: 10px;
       right: 10px;
-      width: 250px;
+      width: 300px;
       height: auto;
-      z-index: 999;
+      z-index: 1000;
     }
     video {
       width: 100%;
-      border-radius: 16px;
+      border-radius: 20px;
     }
-    #transcript-bar {
+    #speechText {
       position: fixed;
-      top: 10px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: #000;
-      color: #0f0;
+      color: black;
+      font-size: 24px;
+      font-family: sans-serif;
+      background: rgba(255,255,255,0.8);
       padding: 10px 20px;
       border-radius: 10px;
-      font-size: 18px;
-      font-family: monospace;
       display: none;
-      animation: fadeIn 0.3s ease-in-out;
+      z-index: 1001;
+      animation: fadeIn 0.4s ease-in-out;
     }
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from { opacity: 0 }
+      to { opacity: 1 }
     }
   </style>
 </head>
 <body>
 
-  <div id="transcript-bar"></div>
+<div id="videoContainer" style="display: none;">
+  <video id="video" autoplay muted></video>
+</div>
 
-  <div id="video-container">
-    <video id="idleVideo" src="videos/idle.mp4" loop muted autoplay></video>
-    <video id="talkingVideo" src="videos/talking.mp4" muted style="display: none;"></video>
-  </div>
+<div id="speechText"></div>
 
-  <audio id="greeting" src="audio/greeting.mp3"></audio>
-  <audio id="bookInfo" src="audio/1.mp3"></audio>
-  <audio id="siteInfo" src="audio/2.mp3"></audio>
-  <audio id="features" src="audio/3.mp3"></audio>
-  <audio id="contact" src="audio/4.mp3"></audio>
-  <audio id="notunderstood" src="audio/basa_dusmedim.mp3"></audio>
+<audio id="audio" src=""></audio>
 
-  <script>
-    const idleVideo = document.getElementById("idleVideo");
-    const talkingVideo = document.getElementById("talkingVideo");
-    const transcriptBar = document.getElementById("transcript-bar");
+<script>
+  const video = document.getElementById("video");
+  const audio = document.getElementById("audio");
+  const videoContainer = document.getElementById("videoContainer");
+  const speechText = document.getElementById("speechText");
 
-    const greeting = document.getElementById("greeting");
-    const bookInfo = document.getElementById("bookInfo");
-    const siteInfo = document.getElementById("siteInfo");
-    const features = document.getElementById("features");
-    const contact = document.getElementById("contact");
-    const notunderstood = document.getElementById("notunderstood");
+  const idleVideo = "videos/idle.mp4";
+  const talkingVideo = "videos/talking.mp4";
+  const greetingAudio = "audio/greeting.mp3";
+  const kitabAudio = "audio/kitab.mp3";
+  const errorAudio = "audio/basa_dusmedim.mp3";
 
-    let recognition;
+  let isIdle = true;
 
-    function playTalkingWithAudio(audioElement) {
-      idleVideo.style.display = "none";
-      talkingVideo.style.display = "block";
-      talkingVideo.currentTime = 0;
-      talkingVideo.play();
-      audioElement.currentTime = 0;
-      audioElement.play();
+  function playVideo(src, muted = true, loop = true) {
+    video.src = src;
+    video.muted = muted;
+    video.loop = loop;
+    video.play();
+  }
 
-      audioElement.onended = () => {
-        talkingVideo.pause();
-        talkingVideo.style.display = "none";
-        idleVideo.style.display = "block";
-        idleVideo.play();
-      };
+  function playAudio(src, callback) {
+    audio.src = src;
+    audio.onended = () => callback && callback();
+    audio.play();
+  }
+
+  function startIdle() {
+    isIdle = true;
+    playVideo(idleVideo, true, true);
+  }
+
+  function stopRecognitionAfter(timeout, recognition) {
+    setTimeout(() => {
+      recognition.stop();
+    }, timeout);
+  }
+
+  function showText(text) {
+    speechText.textContent = "Axtarılır: " + text;
+    speechText.style.display = "block";
+  }
+
+  function hideText() {
+    speechText.style.display = "none";
+  }
+
+  function handleRecognitionResult(result) {
+    const transcript = result.toLowerCase();
+    showText(transcript);
+
+    let matched = false;
+    if (transcript.includes("kitab")) {
+      matched = true;
+      playAudio(kitabAudio, () => startIdle());
     }
 
-    function showTranscript(text) {
-      transcriptBar.textContent = `Searching: ${text}`;
-      transcriptBar.style.display = "block";
-      setTimeout(() => transcriptBar.style.display = "none", 5000);
+    if (!matched) {
+      playAudio(errorAudio, () => startIdle());
     }
+  }
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "f") {
-        playTalkingWithAudio(greeting);
-      }
-    });
+  function startSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
 
-    // Mic trigger without button
-    window.onload = () => {
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'az-AZ';
+    recognition.lang = "az-AZ";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
-        recognition.onresult = (event) => {
-          const transcript = event.results[0][0].transcript.toLowerCase();
-          showTranscript(transcript);
-
-          if (transcript.includes("kitab")) {
-            playTalkingWithAudio(bookInfo);
-          } else if (transcript.includes("sayt")) {
-            playTalkingWithAudio(siteInfo);
-          } else if (transcript.includes("xüsusiyyət") || transcript.includes("funksiya")) {
-            playTalkingWithAudio(features);
-          } else if (transcript.includes("əlaqə") || transcript.includes("nömrə")) {
-            playTalkingWithAudio(contact);
-          } else {
-            playTalkingWithAudio(notunderstood);
-          }
-        };
-
-        recognition.onerror = (event) => {
-          console.error("Speech recognition error", event);
-        };
-
-        recognition.onend = () => {
-          recognition.start();
-        };
-
-        recognition.start();
-      } else {
-        alert("Səs tanıma bu brauzerdə dəstəklənmir.");
-      }
+    recognition.onresult = (event) => {
+      const result = event.results[0][0].transcript;
+      handleRecognitionResult(result);
     };
-  </script>
+
+    recognition.onend = () => {
+      if (isIdle) startIdle();
+    };
+
+    recognition.onerror = () => {
+      playAudio(errorAudio, () => startIdle());
+    };
+
+    recognition.start();
+    stopRecognitionAfter(5000, recognition); // 5 saniyədən sonra dayandır
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "f") {
+      videoContainer.style.display = "block";
+      playVideo(talkingVideo, true, false);
+      playAudio(greetingAudio, () => {
+        startIdle();
+        startSpeechRecognition();
+      });
+    }
+  });
+</script>
+
 </body>
 </html>
