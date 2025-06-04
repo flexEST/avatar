@@ -2,154 +2,178 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8" />
-  <title>Audio Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Audio Assist</title>
   <style>
     body {
       margin: 0;
-      background: white;
+      background: #fff;
       overflow: hidden;
     }
-    #videoContainer {
+
+    #video {
       position: fixed;
       bottom: 10px;
       right: 10px;
-      width: 300px;
+      width: 250px;
       height: auto;
-      z-index: 1000;
-    }
-    video {
-      width: 100%;
       border-radius: 20px;
+      z-index: 100;
     }
+
     #speechText {
       position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: black;
-      font-size: 24px;
+      bottom: 280px;
+      right: 20px;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 12px;
+      font-size: 16px;
       font-family: sans-serif;
-      background: rgba(255,255,255,0.8);
-      padding: 10px 20px;
-      border-radius: 10px;
-      display: none;
-      z-index: 1001;
-      animation: fadeIn 0.4s ease-in-out;
+      opacity: 0;
+      transition: opacity 0.4s ease;
     }
-    @keyframes fadeIn {
-      from { opacity: 0 }
-      to { opacity: 1 }
+
+    #speechText.show {
+      opacity: 1;
     }
   </style>
 </head>
 <body>
+  <video id="video" autoplay muted loop playsinline></video>
+  <div id="speechText"></div>
 
-<div id="videoContainer" style="display: none;">
-  <video id="video" autoplay muted></video>
-</div>
+  <script>
+    const video = document.getElementById("video");
+    const speechText = document.getElementById("speechText");
 
-<div id="speechText"></div>
-
-<audio id="audio" src=""></audio>
-
-<script>
-  const video = document.getElementById("video");
-  const audio = document.getElementById("audio");
-  const videoContainer = document.getElementById("videoContainer");
-  const speechText = document.getElementById("speechText");
-
-  const idleVideo = "videos/idle.mp4";
-  const talkingVideo = "videos/talking.mp4";
-  const greetingAudio = "audio/greeting.mp3";
-  const kitabAudio = "audio/kitab.mp3";
-  const errorAudio = "audio/basa_dusmedim.mp3";
-
-  let isIdle = true;
-
-  function playVideo(src, muted = true, loop = true) {
-    video.src = src;
-    video.muted = muted;
-    video.loop = loop;
-    video.play();
-  }
-
-  function playAudio(src, callback) {
-    audio.src = src;
-    audio.onended = () => callback && callback();
-    audio.play();
-  }
-
-  function startIdle() {
-    isIdle = true;
-    playVideo(idleVideo, true, true);
-  }
-
-  function stopRecognitionAfter(timeout, recognition) {
-    setTimeout(() => {
-      recognition.stop();
-    }, timeout);
-  }
-
-  function showText(text) {
-    speechText.textContent = "Axtarılır: " + text;
-    speechText.style.display = "block";
-  }
-
-  function hideText() {
-    speechText.style.display = "none";
-  }
-
-  function handleRecognitionResult(result) {
-    const transcript = result.toLowerCase();
-    showText(transcript);
-
-    let matched = false;
-    if (transcript.includes("kitab")) {
-      matched = true;
-      playAudio(kitabAudio, () => startIdle());
-    }
-
-    if (!matched) {
-      playAudio(errorAudio, () => startIdle());
-    }
-  }
-
-  function startSpeechRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-
-    recognition.lang = "az-AZ";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event) => {
-      const result = event.results[0][0].transcript;
-      handleRecognitionResult(result);
+    const idleVideo = "videos/idle.mp4";
+    const talkingVideo = "videos/talking.mp4";
+    const greetingVideo = "videos/greeting.mp4";
+    const audios = {
+      greeting: "audio/greeting.mp3",
+      kitap: "audio/kitab.mp3",
+      sayt: "audio/site.mp3",
+      error: "audio/error.mp3",
+      end: "audio/end.mp3",
     };
 
-    recognition.onend = () => {
-      if (isIdle) startIdle();
+    const keywords = {
+      kitab: audios.kitap,
+      site: audios.sayt,
     };
 
-    recognition.onerror = () => {
-      playAudio(errorAudio, () => startIdle());
-    };
+    let recognition;
+    let isTalking = false;
 
-    recognition.start();
-    stopRecognitionAfter(5000, recognition); // 5 saniyədən sonra dayandır
-  }
+    video.src = ""; // Start blank
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key.toLowerCase() === "f") {
-      videoContainer.style.display = "block";
-      playVideo(talkingVideo, true, false);
-      playAudio(greetingAudio, () => {
-        startIdle();
-        startSpeechRecognition();
-      });
+    document.addEventListener("keydown", (e) => {
+      if (e.key.toLowerCase() === "f") {
+        playGreeting();
+      }
+    });
+
+    function playGreeting() {
+      video.src = greetingVideo;
+      video.muted = false;
+      video.loop = false;
+
+      video.onended = () => {
+        video.src = idleVideo;
+        video.muted = true;
+        video.loop = true;
+        video.play();
+        startMic();
+      };
+
+      video.play();
     }
-  });
-</script>
 
+    function startMic() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = "az-AZ";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        showText("Dinlənilir...");
+      };
+
+      recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript.toLowerCase();
+        showText(`Axtarılır: "${text}"`);
+        handleCommand(text);
+      };
+
+      recognition.onerror = () => {
+        playError();
+      };
+
+      recognition.onend = () => {
+        if (!isTalking) playError();
+      };
+
+      recognition.start();
+    }
+
+    function handleCommand(text) {
+      let matched = false;
+
+      for (const key in keywords) {
+        if (text.includes(key)) {
+          matched = true;
+          playResponse(keywords[key]);
+          break;
+        }
+      }
+
+      if (!matched) {
+        playError();
+      }
+    }
+
+    function playResponse(audioSrc) {
+      isTalking = true;
+      const audio = new Audio(audioSrc);
+      video.src = talkingVideo;
+      video.muted = true;
+      video.loop = true;
+      video.play();
+
+      audio.onended = () => {
+        isTalking = false;
+        video.src = idleVideo;
+        video.play();
+      };
+
+      audio.play();
+    }
+
+    function playError() {
+      const audio = new Audio(audios.error);
+      video.src = talkingVideo;
+      video.muted = true;
+      video.loop = true;
+      video.play();
+
+      audio.onended = () => {
+        video.src = idleVideo;
+        video.play();
+      };
+
+      audio.play();
+    }
+
+    function showText(text) {
+      speechText.textContent = text;
+      speechText.classList.add("show");
+      setTimeout(() => {
+        speechText.classList.remove("show");
+      }, 4000);
+    }
+  </script>
 </body>
 </html>
