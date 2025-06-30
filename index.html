@@ -144,8 +144,13 @@
     }
 
     function playErrorAndRetry() {
+      video.src = videos.talking;
+      video.loop = false;
+      video.play();
+
       audio.src = audios.error;
       audio.play();
+
       audio.onended = () => {
         playVideo(videos.idle); // idle video çalınsın
         startRecognition();      // mikrofon yenidən aç
