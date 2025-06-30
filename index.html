@@ -74,6 +74,7 @@
     const searchAnimation = document.getElementById("searchAnimation");
 
     let recognition;
+    let waitingForInput = false;
 
     const videos = {
       idle: "videos/idle.mp4",
@@ -86,7 +87,8 @@
       sayt: "audio/sayt.mp3",
       hava: "audio/hava.mp3",
       saat: "audio/saat.mp3",
-      error: "audio/basa_dusmedim.mp3"
+      error: "audio/basa_dusmedim.mp3",
+      sual: "audio/sual.mp3" // yeni səs: istifadəçidən seçim istəyi
     };
 
     function playVideo(src, isLoop = true) {
@@ -96,7 +98,7 @@
       video.play();
     }
 
-    function playTalkingWithAudio(audioSrc, callback, redirectAfter = false) {
+    function playTalkingWithAudio(audioSrc, callback) {
       video.loop = false;
       video.src = videos.talking;
       video.muted = true;
@@ -108,18 +110,30 @@
         video.pause();
         playVideo(videos.idle);
         if (callback) callback();
-        if (redirectAfter) {
-          window.location.href = "https://wa.me/994558402781";
-        }
+
+        // Yeni səs əlavə: cavabdan sonra seçim səsi səslənsin
+        playFollowupQuestion();
+      };
+    }
+
+    function playFollowupQuestion() {
+      audio.src = audios.sual;
+      audio.play();
+      audio.onended = () => {
+        waitingForInput = true;
       };
     }
 
     function startAssistantFlow() {
       container.style.display = "block";
-      // redirectAfter = true => WhatsApp redirect after greeting
       playTalkingWithAudio(audios.greeting, () => {
         startRecognition();
-      }, true);
+      });
+    }
+
+    function stopAssistant() {
+      container.style.display = "none";
+      if (recognition) recognition.stop();
     }
 
     function showSearchAnimation() {
@@ -141,15 +155,15 @@
       showSearchAnimation();
 
       if (text.includes("kitab")) {
-        playTalkingWithAudio(audios.kitab, startRecognition);
+        playTalkingWithAudio(audios.kitab, () => {});
       } else if (text.includes("sayt")) {
-        playTalkingWithAudio(audios.sayt, startRecognition);
+        playTalkingWithAudio(audios.sayt, () => {});
       } else if (text.includes("hava")) {
-        playTalkingWithAudio(audios.hava, startRecognition);
+        playTalkingWithAudio(audios.hava, () => {});
       } else if (text.includes("saat")) {
-        playTalkingWithAudio(audios.saat, startRecognition);
+        playTalkingWithAudio(audios.saat, () => {});
       } else {
-        playTalkingWithAudio(audios.error, startRecognition);
+        playTalkingWithAudio(audios.error, () => {});
       }
     }
 
@@ -171,14 +185,30 @@
 
       recognition.onerror = function (event) {
         console.error("Speech recognition error:", event.error);
-        playTalkingWithAudio(audios.error, startRecognition);
+        playTalkingWithAudio(audios.error, () => {});
       };
 
       recognition.start();
     }
 
     document.addEventListener("keydown", (e) => {
-      if (e.key.toLowerCase() === "f") {
+      const key = e.key.toLowerCase();
+
+      if (waitingForInput) {
+        if (key === "1") {
+          waitingForInput = false;
+          startRecognition();
+        } else if (key === "2") {
+          waitingForInput = false;
+          window.location.href = "https://wa.me/994558402781";
+        } else if (key === "3") {
+          waitingForInput = false;
+          stopAssistant();
+        }
+        return;
+      }
+
+      if (key === "f") {
         startAssistantFlow();
       }
     });
