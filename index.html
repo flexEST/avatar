@@ -101,9 +101,9 @@
       video.src = videoSrc;
       video.loop = true;
       video.play();
+      if (showText) scrollingText.style.display = "block";
       audio.src = audioSrc;
       audio.play();
-      if (showText) scrollingText.style.display = "block";
       audio.onended = () => {
         if (callback) callback();
         playVideo(videos.idle);
@@ -111,10 +111,10 @@
     }
 
     function startAssistant() {
-      scrollingText.style.display = "none";
+      scrollingText.style.display = "block";
       loopVideoWhileAudioPlays(audios.greeting, videos.talking, () => {
         startTimeout();
-      }, true);
+      }, false);
     }
 
     function startTimeout() {
