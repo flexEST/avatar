@@ -104,12 +104,13 @@
       audio.src = audioSrc;
       audio.play();
       audio.onended = () => {
-        playVideo(videos.idle);
         if (callback) callback();
+        playVideo(videos.idle);
       };
     }
 
     function startAssistant() {
+      scrollingText.style.display = "none";
       loopVideoWhileAudioPlays(audios.greeting, videos.talking, () => {
         scrollingText.style.display = "block";
         startTimeout();
