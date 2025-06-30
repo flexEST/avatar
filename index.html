@@ -1,96 +1,160 @@
 <!DOCTYPE html>
 <html lang="az">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Kitabxana Assistant AI</title>
-<style>
-  body {
-    margin: 0; background: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  #videoContainer {
-    position: fixed; bottom: 20px; right: 20px; width: 300px; z-index: 10;
-  }
-  video {
-    width: 100%; border-radius: 12px;
-  }
-  #scrollingText {
-    display: none;
-    position: fixed;
-    bottom: 0; left: 20px; right: 20px;
-    background: #f0f0f0; color: black;
-    font-size: 16px; padding: 15px; border-radius: 12px; border: 1px solid #ccc;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 5;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-  #scrollingText span {
-    display: inline-block;
-    animation: scroll-left 25s linear infinite;
-  }
-  @keyframes scroll-left {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kitabxana Assistant</title>
+  <style>
+    body {
+      margin: 0;
+      background: white;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #videoContainer {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 300px;
+      z-index: 10;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 12px;
+    }
+
+    #scrollingText {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      background: #f0f0f0;
+      color: black;
+      font-size: 14px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 11;
+      overflow: hidden;
+    }
+
+    #scrollingText span {
+      display: inline-block;
+      white-space: nowrap;
+      animation: scroll-left 20s linear infinite;
+    }
+
+    @keyframes scroll-left {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div id="scrollingText">
-  <span>
-    Salam mən azərbaycanda ilk olaraq yaradılmış kitabxana assistantıyam. kitabxananın tarixi haqqında məlumat almaq üçün <b>A</b> düyməsini sıxın, 
-    kitabxanadan istifadə haqqında məlumat almaq istəyirsinizsə <b>Z</b> düyməsini sıxın, 
-    Rəhbərlik haqqında məlumat almaq istəyirsinizsə <b>D</b> düyməsini sıxın, 
-    fondlar haqqında məlumat almaq istəyirsinizsə <b>Q</b> düyməsini sıxın, 
-    kolleksiyalar haqqında məlumat almaq istəyirsinizsə <b>U</b> düyməsini sıxın, 
-    e-kitabxanadan istifadə etmək üçün <b>R</b> düyməsini sıxın, 
-    biblioqraf ilə əlaqə üçün <b>B</b> düyməsini sıxın.
-  </span>
-</div>
+  <div id="videoContainer">
+    <video id="video" muted loop></video>
+  </div>
 
-<div id="videoContainer">
-  <video id="video" muted loop></video>
-</div>
+  <div id="scrollingText">
+    <span>
+      Salam mən azərbaycanda ilk olaraq yaradılmış kitabxana assistantıyam. kitabxananın tarixi haqqında məlumat almaq üçün <b>A</b> düyməsini sıxın, 
+      kitabxanadan istifadə haqqında məlumat almaq istəyirsinizsə <b>Z</b> düyməsini sıxın, 
+      Rəhbərlik haqqında məlumat almaq istəyirsinizsə <b>D</b> düyməsini sıxın, 
+      fondlar haqqında məlumat almaq istəyirsinizsə <b>Q</b> düyməsini sıxın, 
+      kolleksiyalar haqqında məlumat almaq istəyirsinizsə <b>U</b> düyməsini sıxın, 
+      e-kitabxanadan istifadə etmək üçün <b>R</b> düyməsini sıxın, 
+      biblioqraf ilə əlaqə üçün <b>B</b> düyməsini sıxın.
+    </span>
+  </div>
 
-<audio id="audio"></audio>
+  <audio id="audio"></audio>
 
-<script>
-  const video = document.getElementById("video");
-  const audio = document.getElementById("audio");
-  const scrollingText = document.getElementById("scrollingText");
+  <script>
+    const video = document.getElementById("video");
+    const audio = document.getElementById("audio");
+    const scrollingText = document.getElementById("scrollingText");
 
-  const videos = {
-    idle: "videos/idle.mp4",
-    talking: "videos/talking.mp4"
-  };
+    const videos = {
+      idle: "videos/idle.mp4",
+      talking: "videos/talking.mp4"
+    };
 
-  const audios = {
-    greeting: "audio/salam.mp3",
-    // diger sesler buraya
-  };
+    const audios = {
+      greeting: "audio/salam.mp3",
+      timeout: "audio/secmediniz.mp3",
+      A: "audio/audio1.mp3",
+      Z: "audio/audio2.mp3",
+      D: "audio/audio3.mp3",
+      Q: "audio/audio3.mp3",
+      U: "audio/audio4.mp3",
+      R: "audio/audio5.mp3"
+    };
 
-  function playVideo(src, loop = true) {
-    video.src = src;
-    video.loop = loop;
-    video.play();
-  }
+    let timeoutId = null;
 
-  function startAssistant() {
-    scrollingText.style.display = "block";  // TEXT dərhal görünür
-    playVideo(videos.talking, true);        // talking.mp4 loop ilə oynayır
-    audio.src = audios.greeting;
-    audio.play();                           // salam.mp3 səslənir
-  }
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key.toLowerCase() === "f") {
-      startAssistant();
+    function playVideo(src, loop = true) {
+      video.src = src;
+      video.loop = loop;
+      video.play();
     }
-  });
 
-  // Başlanğıcda idle video oynasın
-  playVideo(videos.idle, true);
-</script>
+    function loopVideoWhileAudioPlays(audioSrc, videoSrc, callback, showText = false) {
+      video.src = videoSrc;
+      video.loop = true;
+      video.play();
+      if (showText) scrollingText.style.display = "block";
+      else scrollingText.style.display = "none";
 
+      audio.src = audioSrc;
+      audio.play();
+
+      audio.onended = () => {
+        if (callback) callback();
+        playVideo(videos.idle);
+      };
+    }
+
+    function startAssistant() {
+      scrollingText.style.display = "block"; // TEXT dərhal görünsün
+      loopVideoWhileAudioPlays(audios.greeting, videos.talking, () => {
+        startTimeout();
+      }, true);
+    }
+
+    function startTimeout() {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        scrollingText.style.display = "none";
+        loopVideoWhileAudioPlays(audios.timeout, videos.talking, () => {
+          startAssistant(); // geri qayıtsın
+        });
+      }, 60000); // 1 dəqiqə gözləyir
+    }
+
+    document.addEventListener("keydown", (e) => {
+      const key = e.key.toUpperCase();
+      if (key === "F") {
+        startAssistant();
+      } else if (["A", "Z", "D", "Q", "U", "R"].includes(key)) {
+        clearTimeout(timeoutId);
+        scrollingText.style.display = "none";
+        loopVideoWhileAudioPlays(audios[key], videos.talking);
+      } else if (key === "B") {
+        window.location.href = "https://wa.me/994558402781";
+      }
+    });
+
+    // Sayt açılarkən idle videosu oynasın
+    playVideo(videos.idle);
+  </script>
 </body>
 </html>
