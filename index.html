@@ -88,7 +88,7 @@
       hava: "audio/hava.mp3",
       saat: "audio/saat.mp3",
       error: "audio/basa_dusmedim.mp3",
-      sual: "audio/sual.mp3" // yeni səs: istifadəçidən seçim istəyi
+      sual: "audio/sual.mp3" // seçim səsləndirmə
     };
 
     function playVideo(src, isLoop = true) {
@@ -110,16 +110,18 @@
         video.pause();
         playVideo(videos.idle);
         if (callback) callback();
-
-        // Yeni səs əlavə: cavabdan sonra seçim səsi səslənsin
-        playFollowupQuestion();
       };
     }
 
     function playFollowupQuestion() {
+      video.loop = false;
+      video.src = videos.talking;
+      video.play();
       audio.src = audios.sual;
       audio.play();
       audio.onended = () => {
+        video.pause();
+        playVideo(videos.idle);
         waitingForInput = true;
       };
     }
@@ -155,15 +157,25 @@
       showSearchAnimation();
 
       if (text.includes("kitab")) {
-        playTalkingWithAudio(audios.kitab, () => {});
+        playTalkingWithAudio(audios.kitab, () => {
+          playFollowupQuestion();
+        });
       } else if (text.includes("sayt")) {
-        playTalkingWithAudio(audios.sayt, () => {});
+        playTalkingWithAudio(audios.sayt, () => {
+          playFollowupQuestion();
+        });
       } else if (text.includes("hava")) {
-        playTalkingWithAudio(audios.hava, () => {});
+        playTalkingWithAudio(audios.hava, () => {
+          playFollowupQuestion();
+        });
       } else if (text.includes("saat")) {
-        playTalkingWithAudio(audios.saat, () => {});
+        playTalkingWithAudio(audios.saat, () => {
+          playFollowupQuestion();
+        });
       } else {
-        playTalkingWithAudio(audios.error, () => {});
+        playTalkingWithAudio(audios.error, () => {
+          playFollowupQuestion();
+        });
       }
     }
 
@@ -185,7 +197,9 @@
 
       recognition.onerror = function (event) {
         console.error("Speech recognition error:", event.error);
-        playTalkingWithAudio(audios.error, () => {});
+        playTalkingWithAudio(audios.error, () => {
+          playFollowupQuestion();
+        });
       };
 
       recognition.start();
@@ -197,7 +211,7 @@
       if (waitingForInput) {
         if (key === "1") {
           waitingForInput = false;
-          startRecognition();
+          startRecognition(); // Loop
         } else if (key === "2") {
           waitingForInput = false;
           window.location.href = "https://wa.me/994558402781";
