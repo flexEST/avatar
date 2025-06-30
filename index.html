@@ -24,7 +24,6 @@
       height: auto;
       border-radius: 12px;
     }
-    
     #textDisplay {
       position: fixed;
       top: 20px;
@@ -36,7 +35,6 @@
       max-width: 300px;
       display: none;
     }
-    
     #searchAnimation {
       position: fixed;
       top: 50%;
@@ -46,12 +44,10 @@
       color: #333;
       display: none;
     }
-    
     .search-dots::after {
       content: '.';
       animation: dots 1.5s steps(5, end) infinite;
     }
-    
     @keyframes dots {
       0%, 20% { content: '.'; }
       40% { content: '..'; }
@@ -62,15 +58,12 @@
 </head>
 <body>
   <div id="textDisplay"></div>
-  
   <div id="searchAnimation">
     <div class="search-dots">Axtarılır</div>
   </div>
-
   <div id="videoContainer" style="display: none;">
     <video id="video" muted loop></video>
   </div>
-
   <audio id="audio"></audio>
 
   <script>
@@ -103,7 +96,7 @@
       video.play();
     }
 
-    function playTalkingWithAudio(audioSrc, callback) {
+    function playTalkingWithAudio(audioSrc, callback, redirectAfter = false) {
       video.loop = false;
       video.src = videos.talking;
       video.muted = true;
@@ -115,14 +108,18 @@
         video.pause();
         playVideo(videos.idle);
         if (callback) callback();
+        if (redirectAfter) {
+          window.location.href = "https://wa.me/994558402781";
+        }
       };
     }
 
     function startAssistantFlow() {
       container.style.display = "block";
+      // redirectAfter = true => WhatsApp redirect after greeting
       playTalkingWithAudio(audios.greeting, () => {
         startRecognition();
-      });
+      }, true);
     }
 
     function showSearchAnimation() {
@@ -134,17 +131,15 @@
 
     function respondToCommand(text) {
       text = text.toLowerCase();
-      
-      // Show recognized text
+
       textDisplay.textContent = "Siz dediniz: " + text;
       textDisplay.style.display = "block";
       setTimeout(() => {
         textDisplay.style.display = "none";
       }, 3000);
-      
-      // Show search animation
+
       showSearchAnimation();
-      
+
       if (text.includes("kitab")) {
         playTalkingWithAudio(audios.kitab, startRecognition);
       } else if (text.includes("sayt")) {
