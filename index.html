@@ -37,7 +37,7 @@
     }
     #scrollingText span {
       display: inline-block;
-      animation: scroll-left 30s linear infinite;
+      animation: scroll-left 60s linear forwards;
       white-space: nowrap;
       padding-left: 100%;
     }
@@ -112,6 +112,18 @@
     }
 
     function startAssistant() {
+      scrollingText.style.display = "block";
+      const span = scrollingText.querySelector("span");
+      // Reset animation
+      span.style.animation = 'none';
+      span.offsetHeight; // Trigger reflow
+      span.style.animation = 'scroll-left 30s linear forwards';
+      
+      // Hide text container when animation ends
+      span.addEventListener('animationend', () => {
+        scrollingText.style.display = "none";
+      }, {once: true});
+
       loopVideoWhileAudioPlays(audios.greeting, videos.talking, () => {
         startTimeout();
       }, true);
@@ -134,7 +146,18 @@
       } else if (["A", "Z", "D", "Q", "U", "R"].includes(key)) {
         clearTimeout(timeoutId);
         scrollingText.style.display = "block";
-        scrollingText.querySelector("span").textContent = "Example text - this will be replaced with actual content later";
+        const span = scrollingText.querySelector("span");
+        span.textContent = "Example text - this will be replaced with actual content later";
+        // Reset animation
+        span.style.animation = 'none';
+        span.offsetHeight; // Trigger reflow
+        span.style.animation = 'scroll-left 60s linear forwards';
+        
+        // Hide text container when animation ends
+        span.addEventListener('animationend', () => {
+          scrollingText.style.display = "none";
+        }, {once: true});
+
         loopVideoWhileAudioPlays(audios[key], videos.talking);
       } else if (key === "B") {
         window.location.href = "https://wa.me/994558402781";
