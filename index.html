@@ -45,7 +45,7 @@
     #scrollingText span {
       display: inline-block;
       white-space: nowrap;
-      animation: scroll-left 20s linear infinite;
+      animation: scroll-left 40s linear infinite;
     }
 
     @keyframes scroll-left {
@@ -112,7 +112,7 @@
       video.loop = true;
       video.play();
       if (showText) scrollingText.style.display = "block";
-      else scrollingText.style.display = "none";
+      // else scrollingText.style.display = "none";
 
       audio.src = audioSrc;
       audio.play();
@@ -135,9 +135,9 @@
       timeoutId = setTimeout(() => {
         scrollingText.style.display = "none";
         loopVideoWhileAudioPlays(audios.timeout, videos.talking, () => {
-          startAssistant(); // geri qayıtsın
+          startAssistant(); // yenidən başlayır
         });
-      }, 60000); // 1 dəqiqə gözləyir
+      }, 60000); // 1 dəqiqə vaxt
     }
 
     document.addEventListener("keydown", (e) => {
@@ -153,7 +153,7 @@
       }
     });
 
-    // Sayt açılarkən idle videosu oynasın
+    // Sayt açıldıqda idle videosu oynasın
     playVideo(videos.idle);
   </script>
 </body>
