@@ -139,17 +139,13 @@
       } else if (text.includes("saat")) {
         playResponseThenQuestion(audios.saat);
       } else {
-        loopUntilUnderstood(); // yenidən səs tanıma
+        playAudioWithTalkingVideo(audios.error, () => {
+          startRecognition(); // yenidən mikrofon aç
+        });
       }
     }
 
-    function loopUntilUnderstood() {
-      playAudioWithTalkingVideo(audios.error, () => {
-        startRecognition(true); // true = loop mode
-      });
-    }
-
-    function startRecognition(loopMode = false) {
+    function startRecognition() {
       if (!('webkitSpeechRecognition' in window)) {
         alert("Səs tanıma dəstəklənmir.");
         return;
@@ -161,22 +157,20 @@
       recognition.maxAlternatives = 1;
 
       recognition.onresult = function (event) {
-        const transcript = event.results[0][0].transcript;
-        if (transcript.trim() === "") {
-          loopUntilUnderstood();
+        const transcript = event.results[0][0].transcript.trim();
+        if (transcript === "") {
+          playAudioWithTalkingVideo(audios.error, () => {
+            startRecognition(); // yenidən mikrofon aç
+          });
         } else {
           handleRecognizedText(transcript);
         }
       };
 
       recognition.onerror = function () {
-        loopUntilUnderstood();
-      };
-
-      recognition.onend = function () {
-        if (loopMode && !waitingForInput) {
-          startRecognition(true);
-        }
+        playAudioWithTalkingVideo(audios.error, () => {
+          startRecognition(); // yenidən mikrofon aç
+        });
       };
 
       recognition.start();
