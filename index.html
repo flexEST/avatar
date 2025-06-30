@@ -2,7 +2,7 @@
 <html lang="az">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kitabxana Assistant</title>
   <style>
     body {
@@ -34,9 +34,9 @@
       padding: 15px;
       border-radius: 12px;
       border: 1px solid #ccc;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       z-index: 5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     #scrollingText span {
       display: inline-block;
@@ -50,6 +50,7 @@
   </style>
 </head>
 <body>
+
   <div id="scrollingText">
     <span>
       Salam mən azərbaycanda ilk olaraq yaradılmış kitabxana assistantıyam. kitabxananın tarixi haqqında məlumat almaq üçün <b>A</b> düyməsini sıxın, 
@@ -89,21 +90,22 @@
       R: "audio/audio5.mp3"
     };
 
-    let timeoutId = null;
-
     function playVideo(src, loop = true) {
       video.src = src;
       video.loop = loop;
       video.play();
     }
 
-    function loopVideoWhileAudioPlays(audioSrc, videoSrc, callback, showText = false) {
+    function playAudioWithVideo(audioSrc, videoSrc, callback, showText = false) {
       video.src = videoSrc;
       video.loop = true;
       video.play();
       if (showText) scrollingText.style.display = "block";
+      else scrollingText.style.display = "none";
+
       audio.src = audioSrc;
       audio.play();
+
       audio.onended = () => {
         if (callback) callback();
         playVideo(videos.idle);
@@ -111,20 +113,11 @@
     }
 
     function startAssistant() {
+      // Burada text-i dərhal göstəririk
       scrollingText.style.display = "block";
-      loopVideoWhileAudioPlays(audios.greeting, videos.talking, () => {
-        startTimeout();
-      }, false);
-    }
-
-    function startTimeout() {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        scrollingText.style.display = "none";
-        loopVideoWhileAudioPlays(audios.timeout, videos.talking, () => {
-          startAssistant();
-        });
-      }, 60000);
+      playAudioWithVideo(audios.greeting, videos.talking, () => {
+        // Audio qurtarandan sonra başqa işlər...
+      }, true);
     }
 
     document.addEventListener("keydown", (e) => {
@@ -132,14 +125,14 @@
       if (key === "F") {
         startAssistant();
       } else if (["A", "Z", "D", "Q", "U", "R"].includes(key)) {
-        clearTimeout(timeoutId);
         scrollingText.style.display = "none";
-        loopVideoWhileAudioPlays(audios[key], videos.talking);
+        playAudioWithVideo(audios[key], videos.talking);
       } else if (key === "B") {
         window.location.href = "https://wa.me/994558402781";
       }
     });
 
+    // Başlanğıcda idle video oynadırıq
     playVideo(videos.idle);
   </script>
 </body>
