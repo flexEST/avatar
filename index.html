@@ -58,9 +58,7 @@
 </head>
 <body>
   <div id="textDisplay"></div>
-  <div id="searchAnimation">
-    <div class="search-dots">Axtarılır</div>
-  </div>
+  <div id="searchAnimation"><div class="search-dots">Axtarılır</div></div>
   <div id="videoContainer" style="display: none;">
     <video id="video" muted loop></video>
   </div>
@@ -88,7 +86,7 @@
       hava: "audio/hava.mp3",
       saat: "audio/saat.mp3",
       error: "audio/basa_dusmedim.mp3",
-      sual: "audio/sual.mp3" // seçim səsləndirmə
+      sual: "audio/sual.mp3"
     };
 
     function playVideo(src, isLoop = true) {
@@ -98,88 +96,60 @@
       video.play();
     }
 
-    function playTalkingWithAudio(audioSrc, callback) {
-      video.loop = false;
+    function playAudioWithTalkingVideo(audioSrc, callback) {
       video.src = videos.talking;
-      video.muted = true;
+      video.loop = false;
       video.play();
       audio.src = audioSrc;
       audio.play();
-
       audio.onended = () => {
         video.pause();
-        playVideo(videos.idle);
         if (callback) callback();
       };
     }
 
     function playFollowupQuestion() {
-      video.loop = false;
-      video.src = videos.talking;
-      video.play();
-      audio.src = audios.sual;
-      audio.play();
-      audio.onended = () => {
-        video.pause();
+      playAudioWithTalkingVideo(audios.sual, () => {
         playVideo(videos.idle);
         waitingForInput = true;
-      };
-    }
-
-    function startAssistantFlow() {
-      container.style.display = "block";
-      playTalkingWithAudio(audios.greeting, () => {
-        startRecognition();
       });
     }
 
-    function stopAssistant() {
-      container.style.display = "none";
-      if (recognition) recognition.stop();
+    function playResponseThenQuestion(audioSrc) {
+      playAudioWithTalkingVideo(audioSrc, () => {
+        playFollowupQuestion();
+      });
     }
 
-    function showSearchAnimation() {
-      searchAnimation.style.display = "block";
-      setTimeout(() => {
-        searchAnimation.style.display = "none";
-      }, 1500);
-    }
-
-    function respondToCommand(text) {
+    function handleRecognizedText(text) {
       text = text.toLowerCase();
 
       textDisplay.textContent = "Siz dediniz: " + text;
       textDisplay.style.display = "block";
-      setTimeout(() => {
-        textDisplay.style.display = "none";
-      }, 3000);
+      setTimeout(() => { textDisplay.style.display = "none"; }, 3000);
 
       showSearchAnimation();
 
       if (text.includes("kitab")) {
-        playTalkingWithAudio(audios.kitab, () => {
-          playFollowupQuestion();
-        });
+        playResponseThenQuestion(audios.kitab);
       } else if (text.includes("sayt")) {
-        playTalkingWithAudio(audios.sayt, () => {
-          playFollowupQuestion();
-        });
+        playResponseThenQuestion(audios.sayt);
       } else if (text.includes("hava")) {
-        playTalkingWithAudio(audios.hava, () => {
-          playFollowupQuestion();
-        });
+        playResponseThenQuestion(audios.hava);
       } else if (text.includes("saat")) {
-        playTalkingWithAudio(audios.saat, () => {
-          playFollowupQuestion();
-        });
+        playResponseThenQuestion(audios.saat);
       } else {
-        playTalkingWithAudio(audios.error, () => {
-          playFollowupQuestion();
-        });
+        loopUntilUnderstood(); // yenidən səs tanıma
       }
     }
 
-    function startRecognition() {
+    function loopUntilUnderstood() {
+      playAudioWithTalkingVideo(audios.error, () => {
+        startRecognition(true); // true = loop mode
+      });
+    }
+
+    function startRecognition(loopMode = false) {
       if (!('webkitSpeechRecognition' in window)) {
         alert("Səs tanıma dəstəklənmir.");
         return;
@@ -192,17 +162,44 @@
 
       recognition.onresult = function (event) {
         const transcript = event.results[0][0].transcript;
-        respondToCommand(transcript);
+        if (transcript.trim() === "") {
+          loopUntilUnderstood();
+        } else {
+          handleRecognizedText(transcript);
+        }
       };
 
-      recognition.onerror = function (event) {
-        console.error("Speech recognition error:", event.error);
-        playTalkingWithAudio(audios.error, () => {
-          playFollowupQuestion();
-        });
+      recognition.onerror = function () {
+        loopUntilUnderstood();
+      };
+
+      recognition.onend = function () {
+        if (loopMode && !waitingForInput) {
+          startRecognition(true);
+        }
       };
 
       recognition.start();
+    }
+
+    function showSearchAnimation() {
+      searchAnimation.style.display = "block";
+      setTimeout(() => {
+        searchAnimation.style.display = "none";
+      }, 1500);
+    }
+
+    function stopAssistant() {
+      container.style.display = "none";
+      if (recognition) recognition.stop();
+    }
+
+    function startAssistantFlow() {
+      container.style.display = "block";
+      playAudioWithTalkingVideo(audios.greeting, () => {
+        playVideo(videos.idle);
+        startRecognition();
+      });
     }
 
     document.addEventListener("keydown", (e) => {
@@ -211,7 +208,7 @@
       if (waitingForInput) {
         if (key === "1") {
           waitingForInput = false;
-          startRecognition(); // Loop
+          startRecognition();
         } else if (key === "2") {
           waitingForInput = false;
           window.location.href = "https://wa.me/994558402781";
