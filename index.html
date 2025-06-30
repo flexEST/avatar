@@ -11,69 +11,56 @@
       overflow: hidden;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
     #videoContainer {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      width: 300px;
-      z-index: 10;
-    }
-
-    video {
-      width: 100%;
-      border-radius: 12px;
-    }
-
-    #scrollingText {
-      display: none;
       position: fixed;
       bottom: 20px;
       right: 20px;
       width: 300px;
-      background: #f0f0f0;
-      color: black;
-      font-size: 14px;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      z-index: 11;
-      overflow: hidden;
+      z-index: 10;
     }
-
+    video {
+      width: 100%;
+      border-radius: 12px;
+    }
+    #scrollingText {
+      display: none;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      font-size: 14px;
+      padding: 10px;
+      border-radius: 0 0 12px 12px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      z-index: 11;
+    }
     #scrollingText span {
       display: inline-block;
+      animation: scroll-left 25s linear infinite;
       white-space: nowrap;
-      animation: scroll-left 40s linear infinite;
+      padding-left: 100%;
     }
-
     @keyframes scroll-left {
-      0% {
-        transform: translateX(100%);
-      }
-      100% {
-        transform: translateX(-100%);
-      }
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
     }
   </style>
 </head>
 <body>
-
   <div id="videoContainer">
     <video id="video" muted loop></video>
-  </div>
-
-  <div id="scrollingText">
-    <span>
-      Salam mən azərbaycanda ilk olaraq yaradılmış kitabxana assistantıyam. kitabxananın tarixi haqqında məlumat almaq üçün <b>A</b> düyməsini sıxın, 
-      kitabxanadan istifadə haqqında məlumat almaq istəyirsinizsə <b>Z</b> düyməsini sıxın, 
-      Rəhbərlik haqqında məlumat almaq istəyirsinizsə <b>D</b> düyməsini sıxın, 
-      fondlar haqqında məlumat almaq istəyirsinizsə <b>Q</b> düyməsini sıxın, 
-      kolleksiyalar haqqında məlumat almaq istəyirsinizsə <b>U</b> düyməsini sıxın, 
-      e-kitabxanadan istifadə etmək üçün <b>R</b> düyməsini sıxın, 
-      biblioqraf ilə əlaqə üçün <b>B</b> düyməsini sıxın.
-    </span>
+    <div id="scrollingText">A
+      <span>
+        Salam mən azərbaycanda ilk olaraq yaradılmış kitabxana assistantıyam. kitabxananın tarixi haqqında məlumat almaq üçün <b>A</b> düyməsini sıxın, 
+        kitabxanadan istifadə haqqında məlumat almaq istəyirsinizsə <b>Z</b> düyməsini sıxın, 
+        Rəhbərlik haqqında məlumat almaq istəyirsinizsə <b>D</b> düyməsini sıxın, 
+        fondlar haqqında məlumat almaq istəyirsinizsə <b>Q</b> düyməsini sıxın, 
+        kolleksiyalar haqqında məlumat almaq istəyirsinizsə <b>U</b> düyməsini sıxın, 
+        e-kitabxanadan istifadə etmək üçün <b>R</b> düyməsini sıxın, 
+        biblioqraf ilə əlaqə üçün <b>B</b> düyməsini sıxın.
+      </span>
+    </div>
   </div>
 
   <audio id="audio"></audio>
@@ -111,12 +98,13 @@
       video.src = videoSrc;
       video.loop = true;
       video.play();
-      if (showText) scrollingText.style.display = "block";
-      // else scrollingText.style.display = "none";
-
+      if (showText) {
+        scrollingText.style.display = "block";
+      } else {
+        scrollingText.style.display = "none";
+      }
       audio.src = audioSrc;
       audio.play();
-
       audio.onended = () => {
         if (callback) callback();
         playVideo(videos.idle);
@@ -124,7 +112,6 @@
     }
 
     function startAssistant() {
-      scrollingText.style.display = "block"; // TEXT dərhal görünsün
       loopVideoWhileAudioPlays(audios.greeting, videos.talking, () => {
         startTimeout();
       }, true);
@@ -135,9 +122,9 @@
       timeoutId = setTimeout(() => {
         scrollingText.style.display = "none";
         loopVideoWhileAudioPlays(audios.timeout, videos.talking, () => {
-          startAssistant(); // yenidən başlayır
+          startAssistant();
         });
-      }, 60000); // 1 dəqiqə vaxt
+      }, 60000);
     }
 
     document.addEventListener("keydown", (e) => {
@@ -153,7 +140,6 @@
       }
     });
 
-    // Sayt açıldıqda idle videosu oynasın
     playVideo(videos.idle);
   </script>
 </body>
