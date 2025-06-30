@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistant</title>
+  <title>Kitabxana Assistant</title>
   <style>
     body {
       margin: 0;
@@ -16,63 +16,58 @@
       bottom: 20px;
       right: 20px;
       width: 300px;
-      height: auto;
       z-index: 10;
     }
     video {
       width: 100%;
-      height: auto;
       border-radius: 12px;
     }
-    #textDisplay {
+    #scrollingText {
       position: fixed;
-      top: 20px;
-      left: 20px;
-      background: rgba(0,0,0,0.7);
+      bottom: 100px;
+      left: 0;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      background: #222;
       color: white;
-      padding: 15px;
-      border-radius: 8px;
-      max-width: 300px;
-      display: none;
+      font-size: 16px;
+      padding: 10px;
     }
-    #searchAnimation {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 24px;
-      color: #333;
-      display: none;
+    #scrollingText span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: scroll-left 25s linear infinite;
     }
-    .search-dots::after {
-      content: '.';
-      animation: dots 1.5s steps(5, end) infinite;
-    }
-    @keyframes dots {
-      0%, 20% { content: '.'; }
-      40% { content: '..'; }
-      60% { content: '...'; }
-      80%, 100% { content: ''; }
+    @keyframes scroll-left {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
     }
   </style>
 </head>
 <body>
-  <div id="textDisplay"></div>
-  <div id="searchAnimation"><div class="search-dots">Axtarılır</div></div>
-  <div id="videoContainer" style="display: none;">
+  <div id="scrollingText" style="display:none;">
+    <span>
+      Salam mən azərbaycanda ilk olaraq yaradılmış kitabxana assistantıyam. kitabxananın tarixi haqqında məlumat almaq üçün <b>A</b> düyməsini sıxın, 
+      kitabxanadan istifadə haqqında məlumat almaq istəyirsinizsə <b>Z</b> düyməsini sıxın, 
+      Rəhbərlik haqqında məlumat almaq istəyirsinizsə <b>D</b> düyməsini sıxın, 
+      fondlar haqqında məlumat almaq istəyirsinizsə <b>Q</b> düyməsini sıxın, 
+      kolleksiyalar haqqında məlumat almaq istəyirsinizsə <b>U</b> düyməsini sıxın, 
+      e-kitabxanadan istifadə etmək üçün <b>R</b> düyməsini sıxın, 
+      biblioqraf ilə əlaqə üçün <b>B</b> düyməsini sıxın.
+    </span>
+  </div>
+
+  <div id="videoContainer">
     <video id="video" muted loop></video>
   </div>
+
   <audio id="audio"></audio>
 
   <script>
     const video = document.getElementById("video");
     const audio = document.getElementById("audio");
-    const container = document.getElementById("videoContainer");
-    const textDisplay = document.getElementById("textDisplay");
-    const searchAnimation = document.getElementById("searchAnimation");
-
-    let recognition;
-    let waitingForInput = false;
+    const scrollingText = document.getElementById("scrollingText");
 
     const videos = {
       idle: "videos/idle.mp4",
@@ -80,149 +75,64 @@
     };
 
     const audios = {
-      greeting: "audio/greeting.mp3",
-      kitab: "audio/kitab.mp3",
-      sayt: "audio/sayt.mp3",
-      hava: "audio/hava.mp3",
-      saat: "audio/saat.mp3",
-      error: "audio/basa_dusmedim.mp3",
-      sual: "audio/sual.mp3"
+      greeting: "audio/salam.mp3",
+      timeout: "audio/secmediniz.mp3",
+      A: "audio/audio1.mp3",
+      Z: "audio/audio2.mp3",
+      D: "audio/audio3.mp3",
+      Q: "audio/audio3.mp3",
+      U: "audio/audio4.mp3",
+      R: "audio/audio5.mp3"
     };
 
-    function playVideo(src, isLoop = true) {
+    let timeoutId = null;
+
+    function playVideo(src, loop = true) {
       video.src = src;
-      video.loop = isLoop;
-      video.muted = true;
+      video.loop = loop;
       video.play();
     }
 
-    function playAudioWithTalkingVideo(audioSrc, callback) {
-      video.src = videos.talking;
+    function playAudioWithVideo(audioSrc, videoSrc, callback) {
+      video.src = videoSrc;
       video.loop = false;
       video.play();
       audio.src = audioSrc;
       audio.play();
       audio.onended = () => {
         video.pause();
+        playVideo(videos.idle);
         if (callback) callback();
       };
     }
 
-    function playFollowupQuestion() {
-      playAudioWithTalkingVideo(audios.sual, () => {
-        playVideo(videos.idle);
-        waitingForInput = true;
+    function startAssistant() {
+      playAudioWithVideo(audios.greeting, videos.talking, () => {
+        scrollingText.style.display = "block";
+        startTimeout();
       });
     }
 
-    function playResponseThenQuestion(audioSrc) {
-      playAudioWithTalkingVideo(audioSrc, () => {
-        playFollowupQuestion();
-      });
-    }
-
-    function handleRecognizedText(text) {
-      text = text.toLowerCase();
-
-      textDisplay.textContent = "Siz dediniz: " + text;
-      textDisplay.style.display = "block";
-      setTimeout(() => { textDisplay.style.display = "none"; }, 3000);
-
-      showSearchAnimation();
-
-      if (text.includes("kitab")) {
-        playResponseThenQuestion(audios.kitab);
-      } else if (text.includes("sayt")) {
-        playResponseThenQuestion(audios.sayt);
-      } else if (text.includes("hava")) {
-        playResponseThenQuestion(audios.hava);
-      } else if (text.includes("saat")) {
-        playResponseThenQuestion(audios.saat);
-      } else {
-        playErrorAndRetry(); // başa düşülməyən səs
-      }
-    }
-
-    function playErrorAndRetry() {
-      video.src = videos.talking;
-      video.loop = false;
-      video.play();
-
-      audio.src = audios.error;
-      audio.play();
-
-      audio.onended = () => {
-        playVideo(videos.idle); // idle video çalınsın
-        startRecognition();      // mikrofon yenidən aç
-      };
-    }
-
-    function startRecognition() {
-      if (!('webkitSpeechRecognition' in window)) {
-        alert("Səs tanıma dəstəklənmir.");
-        return;
-      }
-
-      recognition = new webkitSpeechRecognition();
-      recognition.lang = "az-AZ";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.onresult = function (event) {
-        const transcript = event.results[0][0].transcript.trim();
-        if (transcript === "") {
-          playErrorAndRetry();
-        } else {
-          handleRecognizedText(transcript);
-        }
-      };
-
-      recognition.onerror = function () {
-        playErrorAndRetry();
-      };
-
-      recognition.start();
-    }
-
-    function showSearchAnimation() {
-      searchAnimation.style.display = "block";
-      setTimeout(() => {
-        searchAnimation.style.display = "none";
-      }, 1500);
-    }
-
-    function stopAssistant() {
-      container.style.display = "none";
-      if (recognition) recognition.stop();
-    }
-
-    function startAssistantFlow() {
-      container.style.display = "block";
-      playAudioWithTalkingVideo(audios.greeting, () => {
-        playVideo(videos.idle);
-        startRecognition();
-      });
+    function startTimeout() {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        playAudioWithVideo(audios.timeout, videos.talking, () => {
+          scrollingText.style.display = "none";
+          startAssistant();
+        });
+      }, 60000); // 1 dəqiqə gözləmə
     }
 
     document.addEventListener("keydown", (e) => {
-      const key = e.key.toLowerCase();
-
-      if (waitingForInput) {
-        if (key === "1") {
-          waitingForInput = false;
-          startRecognition();
-        } else if (key === "2") {
-          waitingForInput = false;
-          window.location.href = "https://wa.me/994558402781";
-        } else if (key === "3") {
-          waitingForInput = false;
-          stopAssistant();
-        }
-        return;
-      }
-
-      if (key === "f") {
-        startAssistantFlow();
+      const key = e.key.toUpperCase();
+      if (key === "F") {
+        startAssistant();
+      } else if (["A", "Z", "D", "Q", "U", "R"].includes(key)) {
+        clearTimeout(timeoutId);
+        scrollingText.style.display = "none";
+        playAudioWithVideo(audios[key], videos.talking);
+      } else if (key === "B") {
+        window.location.href = "https://wa.me/994558402781";
       }
     });
   </script>
