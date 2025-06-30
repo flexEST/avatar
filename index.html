@@ -13,9 +13,10 @@
     }
     #videoContainer {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 300px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
       z-index: 10;
     }
     video {
@@ -29,21 +30,33 @@
       width: 100%;
       background: rgba(0, 0, 0, 0.7);
       color: white;
-      font-size: 14px;
+      font-size: 16px;
       padding: 10px;
       border-radius: 0 0 12px 12px;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       z-index: 11;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 60px;
     }
     #scrollingText span {
       display: inline-block;
       animation: scroll-left 60s linear forwards;
       white-space: nowrap;
       padding-left: 100%;
+      margin: 0 auto;
     }
     @keyframes scroll-left {
       0% { transform: translateX(0); }
       100% { transform: translateX(-100%); }
+    }
+    #scrollingText span {
+      display: inline-block;
+      animation: scroll-left 80s linear forwards;
+      white-space: nowrap;
+      padding-left: 100%;
     }
   </style>
 </head>
@@ -117,7 +130,7 @@
       // Reset animation
       span.style.animation = 'none';
       span.offsetHeight; // Trigger reflow
-      span.style.animation = 'scroll-left 30s linear forwards';
+      span.style.animation = 'scroll-left 40s linear forwards';
       
       // Hide text container when animation ends
       span.addEventListener('animationend', () => {
@@ -151,7 +164,7 @@
         // Reset animation
         span.style.animation = 'none';
         span.offsetHeight; // Trigger reflow
-        span.style.animation = 'scroll-left 60s linear forwards';
+        span.style.animation = 'scroll-left 80s linear forwards';
         
         // Hide text container when animation ends
         span.addEventListener('animationend', () => {
