@@ -37,7 +37,7 @@
     }
     #scrollingText span {
       display: inline-block;
-      animation: scroll-left 25s linear infinite;
+      animation: scroll-left 35s linear infinite;
       white-space: nowrap;
       padding-left: 100%;
     }
@@ -50,14 +50,14 @@
 <body>
   <div id="videoContainer">
     <video id="video" muted loop></video>
-    <div id="scrollingText">A
+    <div id="scrollingText">
       <span>
-        Salam mən azərbaycanda ilk olaraq yaradılmış kitabxana assistantıyam. kitabxananın tarixi haqqında məlumat almaq üçün <b>A</b> düyməsini sıxın, 
+        Salam mən Azərbaycanda ilk olaraq yaradılmış kitabxana assistantıyam. Kitabxananın tarixi haqqında məlumat almaq üçün <b>A</b> düyməsini sıxın, 
         kitabxanadan istifadə haqqında məlumat almaq istəyirsinizsə <b>Z</b> düyməsini sıxın, 
         Rəhbərlik haqqında məlumat almaq istəyirsinizsə <b>D</b> düyməsini sıxın, 
-        fondlar haqqında məlumat almaq istəyirsinizsə <b>Q</b> düyməsini sıxın, 
-        kolleksiyalar haqqında məlumat almaq istəyirsinizsə <b>U</b> düyməsini sıxın, 
-        e-kitabxanadan istifadə etmək üçün <b>R</b> düyməsini sıxın, 
+        Fondlar haqqında məlumat almaq istəyirsinizsə <b>Q</b> düyməsini sıxın, 
+        Kolleksiyalar haqqında məlumat almaq istəyirsinizsə <b>U</b> düyməsini sıxın, 
+        E-kitabxanadan istifadə etmək üçün <b>R</b> düyməsini sıxın, 
         biblioqraf ilə əlaqə üçün <b>B</b> düyməsini sıxın.
       </span>
     </div>
@@ -133,7 +133,8 @@
         startAssistant();
       } else if (["A", "Z", "D", "Q", "U", "R"].includes(key)) {
         clearTimeout(timeoutId);
-        scrollingText.style.display = "none";
+        scrollingText.style.display = "block";
+        scrollingText.querySelector("span").textContent = "Example text - this will be replaced with actual content later";
         loopVideoWhileAudioPlays(audios[key], videos.talking);
       } else if (key === "B") {
         window.location.href = "https://wa.me/994558402781";
